@@ -5,7 +5,7 @@
     "buildCommand": "pnpm install --frozen-lockfile && pnpm --filter @matrix-ecommerce/api db:generate && pnpm --filter @matrix-ecommerce/api build"
   },
   "deploy": {
-    "startCommand": "cd apps/api && pnpm db:patch:prod && pnpm start",
+    "startCommand": "pnpm --filter @matrix-ecommerce/api start:railway",
     "restartPolicyType": "ON_FAILURE",
     "restartPolicyMaxRetries": 10
   }

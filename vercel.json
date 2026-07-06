@@ -1,7 +1,7 @@
 {
-  "buildCommand": "pnpm install --frozen-lockfile && pnpm --filter @matrix-ecommerce/web build",
-  "outputDirectory": "apps/web/dist",
   "installCommand": "pnpm install --frozen-lockfile",
+  "buildCommand": "pnpm build:web",
+  "outputDirectory": "apps/web/dist",
   "framework": "vite",
   "devCommand": "pnpm --filter @matrix-ecommerce/web dev",
   "rewrites": [

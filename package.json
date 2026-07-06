@@ -6,6 +6,8 @@
   "scripts": {
     "dev": "concurrently -n \"API,WEB\" -c \"blue,green\" \"pnpm --filter @matrix-ecommerce/api dev\" \"pnpm --filter @matrix-ecommerce/web dev\"",
     "build": "pnpm --filter @matrix-ecommerce/api build && pnpm --filter @matrix-ecommerce/web build",
+    "build:web": "pnpm --filter @matrix-ecommerce/web build",
+    "build:api": "pnpm --filter @matrix-ecommerce/api build",
     "lint": "pnpm --recursive lint",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,vue,json,md}\"",
     "db:generate": "pnpm --filter @matrix-ecommerce/api db:generate",
