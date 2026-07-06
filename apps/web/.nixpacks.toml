@@ -1,0 +1,15 @@
+# Nixpacks configuration for Railway frontend service
+# IMPORTANT: Set Root Directory to "." (repo root) in Railway dashboard, NOT "apps/web"
+
+[phases.setup]
+nixPkgs = ["nodejs_20", "pnpm"]
+
+[phases.install]
+cmds = ["pnpm install --frozen-lockfile"]
+
+[phases.build]
+cmds = ["pnpm --filter @bridgechina/web build"]
+
+[start]
+cmd = "bash apps/web/start.sh"
+

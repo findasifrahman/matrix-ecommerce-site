@@ -1,0 +1,43 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    color-scheme: light;
+  }
+
+  body {
+    @apply text-slate-900;
+    background:
+      radial-gradient(circle at top left, rgba(220, 38, 38, 0.08), transparent 32%),
+      radial-gradient(circle at top right, rgba(13, 148, 136, 0.08), transparent 30%),
+      linear-gradient(180deg, #fff8f6 0%, #fffdfa 26%, #ffffff 100%);
+    font-family: 'Poppins', system-ui, sans-serif;
+  }
+
+  ::selection {
+    background: rgba(225, 29, 72, 0.15);
+    color: #0f172a;
+  }
+
+  h1 { @apply text-neutral-900 font-black; }
+  h2, h3 { @apply text-neutral-900 font-bold; }
+  h4, h5, h6 { @apply text-neutral-900 font-semibold; }
+
+  .text-muted, .muted {
+    @apply text-neutral-600;
+  }
+}
+
+@layer utilities {
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
+
