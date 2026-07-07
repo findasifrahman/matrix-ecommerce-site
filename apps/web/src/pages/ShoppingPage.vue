@@ -33,50 +33,36 @@
                 </div>
               </Transition>
 
-              <form class="hidden flex-col gap-3 lg:flex-row lg:flex" @submit.prevent="openBrowse">
-                <div class="flex h-12 flex-1 items-center rounded-full border border-slate-200 bg-white px-4 shadow-sm focus-within:border-orange-300">
-                  <Search class="h-4 w-4 text-slate-400" />
-                  <input
-                    v-model="searchQuery"
-                    placeholder="Search products, sellers, or keywords"
-                    class="ml-3 w-full bg-transparent text-sm font-medium text-slate-900 placeholder:text-slate-400 focus:outline-none"
-                  />
-                </div>
-                <Button type="submit" variant="primary" class="h-12 rounded-full bg-orange-600 px-6 hover:bg-orange-700">
-                  Search
-                </Button>
-                <Button type="button" variant="ghost" class="h-12 rounded-full px-6" @click="openBrowse">
-                  Browse all
-                </Button>
-              </form>
-
-              <div class="space-y-3 lg:hidden">
-                <div class="rounded-[28px] border border-white/80 bg-white/86 p-4 shadow-[0_16px_36px_rgba(15,23,42,0.08)] backdrop-blur">
+              <div class="rounded-[28px] border border-white/80 bg-white/86 p-4 shadow-[0_16px_36px_rgba(15,23,42,0.08)] backdrop-blur lg:max-w-3xl">
+                <div class="flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
                   <p class="text-[10px] font-bold uppercase tracking-[0.28em] text-slate-400">Find Accessories By Phone</p>
-                  <div class="mt-3 grid gap-3">
-                    <select
-                      v-model="mobileBrandId"
-                      class="h-12 rounded-2xl border border-slate-200 bg-white px-4 text-sm font-medium text-slate-900 outline-none focus:border-orange-300"
-                    >
-                      <option value="">My Brand</option>
-                      <option v-for="brand in mobileBrandOptions" :key="brand.id" :value="brand.id">
-                        {{ brand.name }}
-                      </option>
-                    </select>
-                    <select
-                      v-model="mobileBrandModelId"
-                      :disabled="!mobileBrandId"
-                      class="h-12 rounded-2xl border border-slate-200 bg-white px-4 text-sm font-medium text-slate-900 outline-none focus:border-orange-300 disabled:bg-slate-100 disabled:text-slate-400"
-                    >
-                      <option value="">My Model</option>
-                      <option v-for="model in mobileBrandModelOptions" :key="model.id" :value="model.id">
-                        {{ model.name }}
-                      </option>
-                    </select>
-                    <Button type="button" variant="primary" class="h-12 rounded-full bg-orange-600 px-6 hover:bg-orange-700" @click="openMobileBrandBrowse">
-                      See cases
-                    </Button>
-                  </div>
+                  <Button type="button" variant="ghost" class="h-10 rounded-full px-4 text-xs font-semibold uppercase tracking-[0.12em]" @click="openBrowse">
+                    Browse all
+                  </Button>
+                </div>
+                <div class="mt-3 grid gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto]">
+                  <select
+                    v-model="mobileBrandId"
+                    class="h-12 rounded-2xl border border-slate-200 bg-white px-4 text-sm font-medium text-slate-900 outline-none focus:border-orange-300"
+                  >
+                    <option value="">My Brand</option>
+                    <option v-for="brand in mobileBrandOptions" :key="brand.id" :value="brand.id">
+                      {{ brand.name }}
+                    </option>
+                  </select>
+                  <select
+                    v-model="mobileBrandModelId"
+                    :disabled="!mobileBrandId"
+                    class="h-12 rounded-2xl border border-slate-200 bg-white px-4 text-sm font-medium text-slate-900 outline-none focus:border-orange-300 disabled:bg-slate-100 disabled:text-slate-400"
+                  >
+                    <option value="">My Model</option>
+                    <option v-for="model in mobileBrandModelOptions" :key="model.id" :value="model.id">
+                      {{ model.name }}
+                    </option>
+                  </select>
+                  <Button type="button" variant="primary" class="h-12 rounded-full bg-orange-600 px-6 hover:bg-orange-700" @click="openMobileBrandBrowse">
+                    See cases
+                  </Button>
                 </div>
               </div>
 
@@ -174,8 +160,7 @@
       >
         <div class="flex items-center justify-between gap-3">
           <div>
-            <p class="text-[10px] font-bold uppercase tracking-[0.3em] text-slate-400">Recommended</p>
-            <h2 class="mt-1 text-xl font-black tracking-tight text-slate-950">You may like</h2>
+            <h2 class="text-[10px] font-bold uppercase tracking-[0.3em] text-slate-400">Recommended</h2>
           </div>
           <Button variant="ghost" size="sm" @click="openBrowse">Browse more</Button>
         </div>
@@ -262,7 +247,6 @@ import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import axios from '@/utils/axios';
 import { Button, useToast } from '@matrix-ecommerce/ui';
-import { Search } from 'lucide-vue-next';
 import ProductCard from '@/components/shopping/ProductCard.vue';
 import { useShoppingCart } from '@/composables/useShoppingCart';
 import { getYouMayLikeProducts, recordMenuIntent, recordProductIntent } from '@/utils/shopping-personalization';
@@ -273,7 +257,6 @@ const { addToCart } = useShoppingCart();
 
 const fallbackThumb = 'https://placehold.co/200x200/f8fafc/0f172a?text=ME';
 
-const searchQuery = ref('');
 const heroBanners = ref<any[]>([]);
 const visualMenuSections = ref<any[]>([]);
 const hotDeals = ref<any[]>([]);
@@ -467,10 +450,7 @@ async function loadHomepageCollections() {
 }
 
 function openBrowse() {
-  router.push({
-    name: 'shopping-browse',
-    query: searchQuery.value.trim() ? { q: searchQuery.value.trim() } : undefined,
-  });
+  router.push({ name: 'shopping-browse' });
 }
 
 function openMobileBrandBrowse() {
