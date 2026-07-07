@@ -273,7 +273,7 @@ let heroTimer: number | null = null;
 const activeHero = computed(() => heroBanners.value[activeHeroIndex.value] || null);
 const activeHeroImage = computed(() => activeHero.value?.coverAsset?.public_url || activeHero.value?.coverAsset?.thumbnail_url || fallbackThumb);
 const activeHeroTitle = computed(() => activeHero.value?.title || 'Premium accessories for your store-ready phone setup.');
-const activeHeroSubtitle = computed(() => activeHero.value?.subtitle || 'Shop uploaded products, select hot items from the admin panel, and keep the homepage focused on what actually sells.');
+const activeHeroSubtitle = computed(() => activeHero.value?.subtitle || 'We Sell World class brands and accessories for your phone. Get the best deals and fast delivery with Matrix Shop.');
 
 const quickSearchChips = [
   { label: 'Phone cover', keyword: 'phone cover' },

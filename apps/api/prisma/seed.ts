@@ -389,8 +389,8 @@ async function main() {
   await prisma.homepageBanner.upsert({
     where: { id: 'matrix-ecommerce-home-banner' },
     update: {
-      title: 'Get factory price with fastest delivery',
-      subtitle: 'Premium shopping concierge for China sourcing',
+      title: 'Get Lowest Price with Fastest Delivery',
+      subtitle: 'Premium shopping concierge',
       link: '/shopping',
       cta_text: 'Shop now',
       is_active: true,
@@ -398,8 +398,8 @@ async function main() {
     },
     create: {
       id: 'matrix-ecommerce-home-banner',
-      title: 'Get factory price with fastest delivery',
-      subtitle: 'Premium shopping concierge for China sourcing',
+      title: 'Get Lowest Price with Fastest Delivery',
+      subtitle: 'Premium shopping concierge',
       link: '/shopping',
       cta_text: 'Shop now',
       is_active: true,
@@ -412,7 +412,7 @@ async function main() {
     update: {
       title: 'Cash on order, proof later',
       subtitle: 'Upload payment slip from your profile',
-      description: 'Seller approval, admin purchase, then shipment updates.',
+      description: 'Seller approval',
       offer_type: 'trust',
       currency: 'BDT',
       value: 0,
