@@ -93,7 +93,15 @@ function normalizeCartItem(item: any): CartItem {
     displayPriceMax,
     displayCurrency: item?.displayCurrency || item?.currency_snapshot || product.currency,
     sourceCurrency: item?.sourceCurrency || product.currency,
-    imageUrl: item?.imageUrl || item?.image_url_snapshot || fallbackSkuImage?.thumbnailUrl || fallbackSkuImage?.imageUrl || product.coverAsset?.public_url,
+    imageUrl:
+      item?.imageUrl
+      || item?.image_url_snapshot
+      || fallbackSkuImage?.thumbnailUrl
+      || fallbackSkuImage?.imageUrl
+      || item?.images?.[0]
+      || product.images?.[0]
+      || product.coverAsset?.public_url
+      || product.coverAsset?.thumbnail_url,
     sourceUrl: item?.sourceUrl || item?.source_url_snapshot || product.source_url,
     productUrl: item?.productUrl || item?.product_url_snapshot || product.product_url || item?.sourceUrl || item?.source_url_snapshot || product.source_url,
     sellerName: item?.sellerName || item?.seller_name_snapshot || product.vendor_name || item?.shopName || item?.shop?.name,

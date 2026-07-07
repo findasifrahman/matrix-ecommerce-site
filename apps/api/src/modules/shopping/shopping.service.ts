@@ -101,8 +101,8 @@ function normalizeGalleryAssets(product: any, mediaById: Map<string, any>): stri
 }
 
 function normalizeLocalCard(product: any, mediaById: Map<string, any> = new Map()): ProductCard {
-  const imageUrl = product.coverAsset?.public_url || product.coverAsset?.thumbnail_url || undefined;
   const gallery = normalizeGalleryAssets(product, mediaById);
+  const imageUrl = product.coverAsset?.public_url || product.coverAsset?.thumbnail_url || gallery[0] || undefined;
   const images = [imageUrl, ...gallery].filter(Boolean) as string[];
 
   return {
@@ -145,8 +145,8 @@ function normalizeLocalDetail(product: any, mediaById: Map<string, any> = new Ma
     const asset = row?.image_asset_id ? mediaById.get(String(row.image_asset_id)) : null;
     return {
       ...row,
-      imageUrl: asset?.public_url || asset?.thumbnail_url || undefined,
-      thumbnailUrl: asset?.thumbnail_url || asset?.public_url || undefined,
+      imageUrl: asset?.public_url || asset?.thumbnail_url || card.imageUrl || card.images?.[0] || undefined,
+      thumbnailUrl: asset?.thumbnail_url || asset?.public_url || card.imageUrl || card.images?.[0] || undefined,
     };
   });
 
