@@ -33,7 +33,7 @@
                 </div>
               </Transition>
 
-              <form class="flex flex-col gap-3 sm:flex-row" @submit.prevent="openBrowse">
+              <form class="hidden flex-col gap-3 lg:flex-row lg:flex" @submit.prevent="openBrowse">
                 <div class="flex h-12 flex-1 items-center rounded-full border border-slate-200 bg-white px-4 shadow-sm focus-within:border-orange-300">
                   <Search class="h-4 w-4 text-slate-400" />
                   <input
@@ -49,6 +49,36 @@
                   Browse all
                 </Button>
               </form>
+
+              <div class="space-y-3 lg:hidden">
+                <div class="rounded-[28px] border border-white/80 bg-white/86 p-4 shadow-[0_16px_36px_rgba(15,23,42,0.08)] backdrop-blur">
+                  <p class="text-[10px] font-bold uppercase tracking-[0.28em] text-slate-400">Find Accessories By Phone</p>
+                  <div class="mt-3 grid gap-3">
+                    <select
+                      v-model="mobileBrandId"
+                      class="h-12 rounded-2xl border border-slate-200 bg-white px-4 text-sm font-medium text-slate-900 outline-none focus:border-orange-300"
+                    >
+                      <option value="">My Brand</option>
+                      <option v-for="brand in mobileBrandOptions" :key="brand.id" :value="brand.id">
+                        {{ brand.name }}
+                      </option>
+                    </select>
+                    <select
+                      v-model="mobileBrandModelId"
+                      :disabled="!mobileBrandId"
+                      class="h-12 rounded-2xl border border-slate-200 bg-white px-4 text-sm font-medium text-slate-900 outline-none focus:border-orange-300 disabled:bg-slate-100 disabled:text-slate-400"
+                    >
+                      <option value="">My Model</option>
+                      <option v-for="model in mobileBrandModelOptions" :key="model.id" :value="model.id">
+                        {{ model.name }}
+                      </option>
+                    </select>
+                    <Button type="button" variant="primary" class="h-12 rounded-full bg-orange-600 px-6 hover:bg-orange-700" @click="openMobileBrandBrowse">
+                      See cases
+                    </Button>
+                  </div>
+                </div>
+              </div>
 
               <div class="flex flex-wrap gap-2">
                 <button
@@ -228,7 +258,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref } from 'vue';
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import axios from '@/utils/axios';
 import { Button, useToast } from '@matrix-ecommerce/ui';
@@ -251,6 +281,9 @@ const recommendedItems = ref<any[]>([]);
 const hotProducts = ref<any[]>([]);
 const hotProductKeywords = ref<string[]>([]);
 const homepageCollections = ref<Array<{ key: string; label: string; title: string; imageUrl?: string; imageAlt?: string; searchKeyword?: string; items: any[]; sortOrder: number }>>([]);
+const storefrontTaxonomy = ref<any[]>([]);
+const mobileBrandId = ref('');
+const mobileBrandModelId = ref('');
 const activeHeroIndex = ref(0);
 let heroTimer: number | null = null;
 
@@ -265,6 +298,24 @@ const quickSearchChips = [
   { label: 'Earbud', keyword: 'earbud' },
   { label: 'Power bank', keyword: 'power bank' },
 ];
+
+const mobilePhoneCategory = computed(() =>
+  storefrontTaxonomy.value.find((category: any) => category?.slug === 'phone-accessories')
+  || storefrontTaxonomy.value.find((category: any) => category?.requires_brand_model)
+  || storefrontTaxonomy.value[0]
+  || null,
+);
+
+const mobileBrandOptions = computed(() => {
+  const brands = Array.isArray(mobilePhoneCategory.value?.brands) ? mobilePhoneCategory.value.brands : [];
+  return brands.filter((brand: any) => String(brand?.name || '').toLowerCase() !== 'no brand');
+});
+
+const mobileBrandModelOptions = computed(() => {
+  const brand = mobileBrandOptions.value.find((entry: any) => entry.id === mobileBrandId.value);
+  const models = Array.isArray(brand?.models) ? brand.models : [];
+  return models.filter((model: any) => String(model?.name || '').toLowerCase() !== 'no model');
+});
 
 function menuImage(label: string): string {
   const normalized = String(label || '')
@@ -360,6 +411,15 @@ async function loadVisualMenu() {
   }
 }
 
+async function loadStorefrontTaxonomy() {
+  try {
+    const response = await axios.get('/api/public/shopping/taxonomy');
+    storefrontTaxonomy.value = Array.isArray(response.data) ? response.data : [];
+  } catch {
+    storefrontTaxonomy.value = [];
+  }
+}
+
 async function loadHotDeals() {
   try {
     const response = await axios.get('/api/public/shopping/hot-deals');
@@ -413,6 +473,18 @@ function openBrowse() {
   });
 }
 
+function openMobileBrandBrowse() {
+  const mainCategory = String(mobilePhoneCategory.value?.slug || '').trim();
+  router.push({
+    name: 'shopping-browse',
+    query: {
+      mainCategory: mainCategory || undefined,
+      brandId: mobileBrandId.value || undefined,
+      brandModelId: mobileBrandModelId.value || undefined,
+    },
+  });
+}
+
 function openKeyword(keyword: string) {
   const value = String(keyword || '').trim();
   if (value) {
@@ -438,6 +510,7 @@ async function loadHomepage() {
   loadRecommended();
   await Promise.all([
     loadHeroBanners(),
+    loadStorefrontTaxonomy(),
     loadVisualMenu(),
     loadHotDeals(),
     loadHotProducts(),
@@ -447,6 +520,10 @@ async function loadHomepage() {
 }
 
 onMounted(loadHomepage);
+
+watch(mobileBrandId, () => {
+  mobileBrandModelId.value = '';
+});
 
 onUnmounted(() => {
   stopHeroRotation();

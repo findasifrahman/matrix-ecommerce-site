@@ -31,6 +31,8 @@ export interface CartItem {
     label?: string;
     sourceUnitPrice?: number;
     displayUnitPrice?: number;
+    imageUrl?: string;
+    thumbnailUrl?: string;
   }>;
   selectedShippingMethod?: string;
   estimatedWeight?: number;
@@ -57,6 +59,8 @@ function mergeSkuDetails(
       existing.label = row?.label || existing.label;
       existing.sourceUnitPrice = row?.sourceUnitPrice ?? existing.sourceUnitPrice;
       existing.displayUnitPrice = row?.displayUnitPrice ?? existing.displayUnitPrice;
+      existing.imageUrl = row?.imageUrl || existing.imageUrl;
+      existing.thumbnailUrl = row?.thumbnailUrl || existing.thumbnailUrl;
     } else {
       merged.set(key, { ...row, specId: key, qty: Number(row?.qty || 0) });
     }
@@ -130,13 +134,23 @@ loadCart();
 
 export function useShoppingCart() {
   const addToCart = (product: any, quantity: number = 1, skuDetails?: CartItem['skuDetails']) => {
+    const normalizedSkuDetails = Array.isArray(skuDetails)
+      ? skuDetails
+        .map((row) => ({
+          ...row,
+          qty: Number(row?.qty || 0),
+        }))
+        .filter((row) => row.qty > 0)
+      : undefined;
+    const resolvedQuantity = normalizedSkuDetails?.reduce((sum, row) => sum + Number(row.qty || 0), 0) || Math.max(1, Number(quantity || 0));
+
     const existingIndex = cartItems.value.findIndex(
       item => item.externalId === product.externalId
     );
 
     if (existingIndex >= 0) {
       // Update existing item
-      cartItems.value[existingIndex].quantity += quantity;
+      cartItems.value[existingIndex].quantity += resolvedQuantity;
       cartItems.value[existingIndex].priceMin = typeof product.priceMin === 'number' ? product.priceMin : cartItems.value[existingIndex].priceMin;
       cartItems.value[existingIndex].priceMax = typeof product.priceMax === 'number' ? product.priceMax : cartItems.value[existingIndex].priceMax;
       cartItems.value[existingIndex].displayPriceMin = typeof product.displayPriceMin === 'number' ? product.displayPriceMin : cartItems.value[existingIndex].displayPriceMin;
@@ -151,22 +165,29 @@ export function useShoppingCart() {
       if (product.sellerName || product.shopName) cartItems.value[existingIndex].sellerName = product.sellerName || product.shopName;
       if (product.vendorId) cartItems.value[existingIndex].vendorId = product.vendorId;
       if (product.shopUrl) cartItems.value[existingIndex].shopUrl = product.shopUrl;
-      if (skuDetails) {
-        cartItems.value[existingIndex].skuDetails = mergeSkuDetails(cartItems.value[existingIndex].skuDetails, skuDetails);
+      if (normalizedSkuDetails) {
+        cartItems.value[existingIndex].skuDetails = mergeSkuDetails(cartItems.value[existingIndex].skuDetails, normalizedSkuDetails);
         cartItems.value[existingIndex].quantity = cartItems.value[existingIndex].skuDetails?.reduce((sum, row) => sum + Number(row.qty || 0), 0) || cartItems.value[existingIndex].quantity;
+        const firstSkuImage = cartItems.value[existingIndex].skuDetails?.find((row) => row.thumbnailUrl || row.imageUrl);
+        if (firstSkuImage?.thumbnailUrl || firstSkuImage?.imageUrl) {
+          cartItems.value[existingIndex].imageUrl = firstSkuImage.thumbnailUrl || firstSkuImage.imageUrl;
+        }
       }
     } else {
       const normalizedProduct = normalizeCartItem({
         ...product,
-        quantity,
-        skuDetails,
+        quantity: resolvedQuantity,
+        skuDetails: normalizedSkuDetails,
       });
 
       // Add new item
       cartItems.value.push({
         ...normalizedProduct,
-        quantity,
-        skuDetails,
+        imageUrl: normalizedSkuDetails?.find((row) => row.thumbnailUrl || row.imageUrl)?.thumbnailUrl
+          || normalizedSkuDetails?.find((row) => row.imageUrl)?.imageUrl
+          || normalizedProduct.imageUrl,
+        quantity: resolvedQuantity,
+        skuDetails: normalizedSkuDetails,
       });
     }
   };

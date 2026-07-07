@@ -51,7 +51,7 @@
                 class="flex flex-col gap-4 rounded-[1.5rem] border border-slate-200 bg-slate-50 p-4 sm:flex-row"
               >
                 <div class="h-28 w-full overflow-hidden rounded-2xl bg-white sm:h-24 sm:w-24 sm:flex-shrink-0">
-                  <img v-if="item.imageUrl" :src="item.imageUrl" :alt="item.title" class="h-full w-full object-cover" />
+                  <img v-if="getCartItemImage(item)" :src="getCartItemImage(item)" :alt="item.title" class="h-full w-full object-cover" />
                   <div v-else class="flex h-full w-full items-center justify-center text-slate-400">
                     <Package class="h-8 w-8" />
                   </div>
@@ -500,6 +500,17 @@ function getItemCheckoutQuantity(item: any): number {
   }
 
   return Number(item?.quantity || 0);
+}
+
+function getCartItemImage(item: any): string {
+  if (Array.isArray(item?.skuDetails) && item.skuDetails.length > 0) {
+    const skuAsset = item.skuDetails.find((sku: any) => sku?.thumbnailUrl || sku?.imageUrl);
+    if (skuAsset?.thumbnailUrl || skuAsset?.imageUrl) {
+      return String(skuAsset.thumbnailUrl || skuAsset.imageUrl);
+    }
+  }
+
+  return String(item?.imageUrl || '');
 }
 
 const subtotal = computed(() => {

@@ -805,6 +805,8 @@ function buildCartPayload() {
         label: selectedSku.value.label,
         sourceUnitPrice: displayUnitPrice.value,
         displayUnitPrice: displayUnitPrice.value,
+        imageUrl: selectedSku.value.imageUrl || undefined,
+        thumbnailUrl: selectedSku.value.thumbnailUrl || selectedSku.value.imageUrl || undefined,
       },
     ],
   };
