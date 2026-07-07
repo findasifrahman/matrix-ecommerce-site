@@ -713,7 +713,7 @@ function buildCheckoutItems() {
       qty,
       priceMin: unitPrice,
       priceMax: unitPrice,
-      imageUrl: item.imageUrl,
+      imageUrl: getCartItemImage(item) || item.imageUrl,
       sourceUrl: item.sourceUrl,
       productUrl: item.productUrl || item.sourceUrl,
       sellerName: item.sellerName,

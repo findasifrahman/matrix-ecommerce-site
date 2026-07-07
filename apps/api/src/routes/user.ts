@@ -94,6 +94,8 @@ const checkoutItemSchema = z.object({
     label: nullableOptionalString,
     sourceUnitPrice: nullableOptionalPositiveNumber,
     displayUnitPrice: nullableOptionalPositiveNumber,
+    imageUrl: nullableOptionalString,
+    thumbnailUrl: nullableOptionalString,
   })).optional(),
   selectedShippingMethod: nullableOptionalString,
   estimatedWeight: nullableOptionalNonNegativeNumber,
@@ -109,6 +111,8 @@ function sanitizeSkuDetails(value: z.infer<typeof checkoutItemSchema>['skuDetail
       label: row.label ?? undefined,
       sourceUnitPrice: row.sourceUnitPrice ?? undefined,
       displayUnitPrice: row.displayUnitPrice ?? undefined,
+      imageUrl: row.imageUrl ?? undefined,
+      thumbnailUrl: row.thumbnailUrl ?? undefined,
     }))
     .filter((row) => row.specId && row.qty > 0);
 }
