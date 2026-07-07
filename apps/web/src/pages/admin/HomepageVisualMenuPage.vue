@@ -3,11 +3,12 @@
     <div class="mb-6 flex items-center justify-between gap-4">
       <div>
         <h1 class="text-2xl font-bold text-slate-900">Homepage Visual Menu</h1>
-        <p class="mt-1 text-sm text-slate-600">Manage the clickable category tiles shown below premium factory products.</p>
+        <p class="mt-1 text-sm text-slate-600">Manage the quick menu and homepage rows: quick-menu, you-may-like, phone-cover, charger, and earbud.</p>
       </div>
       <div class="flex flex-wrap gap-2">
         <Button variant="ghost" @click="router.push('/admin/homepage')">Banners</Button>
         <Button variant="ghost" @click="router.push('/admin/homepage-offers')">Featured Deals</Button>
+        <Button variant="ghost" @click="router.push('/admin/homepage-hot-deals')">Hot Items</Button>
         <Button variant="primary" @click="openAddModal">
           <Plus class="mr-2 h-4 w-4" />
           Add Tile

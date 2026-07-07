@@ -12,6 +12,12 @@
         >
           Featured Deals
         </router-link>
+        <router-link
+          to="/admin/homepage-hot-deals"
+          class="inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50"
+        >
+          Hot Items
+        </router-link>
         <Button variant="primary" @click="openAddModal">
           <Plus class="h-4 w-4 mr-2" />
           Add Banner

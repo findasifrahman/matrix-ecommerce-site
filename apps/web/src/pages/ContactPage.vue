@@ -20,7 +20,7 @@
           <div class="rounded-[22px] border border-slate-200 bg-slate-50 p-5">
             <p class="text-[10px] font-bold uppercase tracking-[0.32em] text-slate-400">Address</p>
             <p class="mt-2 text-[18px] font-black tracking-tight text-slate-950">
-              Room 13D, No. 29, Jianshe Sixth Road, Yuexiu District, Rongjin Building, Taojin, Guangzhou
+              Mirpur, Pallabi Thana, Section -12, Dhaka-1216, Bangladesh.
             </p>
             <p class="mt-1 text-[12px] text-slate-500">Guangzhou, China</p>
           </div>

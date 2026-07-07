@@ -200,6 +200,15 @@ const router = createRouter({
           component: () => import('@/pages/admin/HomepageOffersPage.vue'),
         },
         {
+          path: 'homepage-hot-deals',
+          name: 'admin-homepage-hot-deals',
+          component: () => import('@/pages/admin/HomepageHotDealsPage.vue'),
+        },
+        {
+          path: 'homepage-hot-items',
+          redirect: '/admin/homepage-hot-deals',
+        },
+        {
           path: 'homepage-visual-menu',
           name: 'admin-homepage-visual-menu',
           component: () => import('@/pages/admin/HomepageVisualMenuPage.vue'),
@@ -228,6 +237,8 @@ const router = createRouter({
         { path: 'featured-items', redirect: '/admin/shopping' },
         { path: 'service-offers', redirect: '/admin/homepage-offers' },
         { path: 'homepage-offers', redirect: '/admin/homepage-offers' },
+        { path: 'homepage-hot-deals', redirect: '/admin/homepage-hot-deals' },
+        { path: 'homepage-hot-items', redirect: '/admin/homepage-hot-deals' },
         { path: 'homepage-visual-menu', redirect: '/admin/homepage-visual-menu' },
         { path: 'homepage-banners', redirect: '/admin/homepage' },
         { path: 'service-providers', redirect: '/admin/sellers' },
@@ -285,7 +296,7 @@ const router = createRouter({
   ],
 });
 
-router.beforeEach(async (to, from, next) => {
+router.beforeEach(async (to, _from, next) => {
   const authStore = useAuthStore();
 
   // Check if this is a public route - check both the route and matched routes

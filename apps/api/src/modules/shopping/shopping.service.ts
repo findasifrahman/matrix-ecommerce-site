@@ -572,5 +572,111 @@ export async function getCuratedHomeSections(): Promise<Array<{ slug: string; la
       label: category.name,
       items: await loadLocalCards(products),
     };
+  })).then((sections) => sections.filter((section) => section.items.length > 0));
+}
+
+type HomepageCollectionConfig = {
+  key: string;
+  label: string;
+  limit: number;
+  fallbackKeyword: string;
+  sortOrder: number;
+  productTypeSlug?: string;
+};
+
+const HOMEPAGE_COLLECTIONS: HomepageCollectionConfig[] = [
+  { key: 'you-may-like', label: 'You may like', limit: 8, fallbackKeyword: 'phone accessories', sortOrder: 1 },
+  { key: 'phone-cover', label: 'Phone cover', limit: 4, fallbackKeyword: 'phone cover', sortOrder: 2, productTypeSlug: 'phone-cover' },
+  { key: 'charger', label: 'Charger', limit: 4, fallbackKeyword: 'charger', sortOrder: 3, productTypeSlug: 'charger' },
+  { key: 'earbud', label: 'Earbud', limit: 4, fallbackKeyword: 'earbud', sortOrder: 4, productTypeSlug: 'earbud' },
+];
+
+export async function getHomepageCollections(): Promise<Array<{
+  key: string;
+  label: string;
+  title: string;
+  searchKeyword: string;
+  imageUrl?: string;
+  imageAlt?: string;
+  items: ProductCard[];
+  sortOrder: number;
+}>> {
+  const menuItems = await prisma.homepageVisualMenuItem.findMany({
+    where: { is_active: true },
+    orderBy: [{ section_sort_order: 'asc' }, { sort_order: 'asc' }, { created_at: 'asc' }],
+  });
+  const productTypes = await prisma.productType.findMany({
+    where: {
+      slug: {
+        in: HOMEPAGE_COLLECTIONS.map((config) => config.productTypeSlug).filter((slug): slug is string => Boolean(slug)),
+      },
+      is_active: true,
+    },
+    select: { id: true, slug: true },
+  });
+  const productTypeIdBySlug = new Map<string, string>(productTypes.map((type) => [String(type.slug), String(type.id)]));
+
+  const sectionMap = new Map<string, typeof menuItems>();
+  for (const item of menuItems) {
+    const sectionKey = String(item.section_key || '').trim();
+    if (!sectionKey) continue;
+    const list = sectionMap.get(sectionKey) || [];
+    list.push(item);
+    sectionMap.set(sectionKey, list);
+  }
+
+  const sections = await Promise.all(HOMEPAGE_COLLECTIONS.map(async (config) => {
+    const sectionItems = sectionMap.get(config.key) || [];
+    const primary = sectionItems[0];
+    const keyword = String(primary?.search_keyword || config.fallbackKeyword || '').trim();
+    if (!keyword) return null;
+
+    const productTypeId: string | undefined = config.productTypeSlug ? productTypeIdBySlug.get(config.productTypeSlug) : undefined;
+    if (config.productTypeSlug && !productTypeId) return null;
+
+    const result = await searchByKeyword(keyword, {
+      page: 1,
+      pageSize: config.limit,
+      productTypeId,
+    });
+    if (!result.items.length) return null;
+
+    return {
+      key: config.key,
+      label: primary?.section_label || config.label,
+      title: primary?.title || config.label,
+      searchKeyword: keyword,
+      imageUrl: primary?.image_url || undefined,
+      imageAlt: primary?.image_alt || primary?.title || config.label,
+      items: result.items.slice(0, config.limit),
+      sortOrder: primary?.section_sort_order ?? config.sortOrder,
+    };
   }));
+
+  return sections
+    .filter((section): section is NonNullable<typeof section> => Boolean(section))
+    .sort((a, b) => a.sortOrder - b.sortOrder || a.label.localeCompare(b.label));
+}
+
+export async function getHomepageHotDeals(): Promise<ProductCard[]> {
+  const deals = await prisma.homepageHotDeal.findMany({
+    where: { is_active: true },
+    include: {
+      product: {
+        include: {
+          coverAsset: true,
+          seller: { include: { sellerProfile: true } },
+          category: true,
+          mainCategory: true,
+          taxonomyBrand: true,
+          brandModel: true,
+          productType: true,
+        },
+      },
+    },
+    orderBy: [{ sort_order: 'asc' }, { created_at: 'asc' }],
+    take: 2,
+  });
+
+  return loadLocalCards(deals.map((deal) => deal.product));
 }

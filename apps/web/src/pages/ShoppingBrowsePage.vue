@@ -119,6 +119,7 @@ const selectedCategory = ref(String(route.query.category || ''));
 const selectedMainCategory = ref(String(route.query.mainCategory || ''));
 const selectedBrandId = ref(String(route.query.brandId || ''));
 const selectedBrandModelId = ref(String(route.query.brandModelId || ''));
+const selectedProductTypeId = ref(String(route.query.productTypeId || ''));
 const currentPage = ref(Math.max(1, Number(route.query.page || 1)));
 const pageSize = ref(24);
 const totalPages = ref(1);
@@ -132,6 +133,7 @@ const heading = computed(() => {
   if (searchQuery.value.trim()) return `Search results for "${searchQuery.value.trim()}"`;
   if (selectedBrandModelId.value) return 'Accessories for selected model';
   if (selectedBrandId.value) return 'Accessories for selected brand';
+  if (selectedProductTypeId.value) return 'Selected product type';
   if (selectedMainCategory.value) return `Category: ${selectedMainCategory.value}`;
   if (selectedCategory.value) return `Category: ${selectedCategory.value}`;
   return 'All products';
@@ -164,6 +166,7 @@ async function runSearch() {
         mainCategory: selectedMainCategory.value || undefined,
         brandId: selectedBrandId.value || undefined,
         brandModelId: selectedBrandModelId.value || undefined,
+        productTypeId: selectedProductTypeId.value || undefined,
         vendorId: selectedVendorId.value || undefined,
         page: currentPage.value,
         pageSize: pageSize.value,
@@ -197,6 +200,7 @@ function clearSearch() {
   selectedMainCategory.value = '';
   selectedBrandId.value = '';
   selectedBrandModelId.value = '';
+  selectedProductTypeId.value = '';
   selectedVendorId.value = '';
   currentPage.value = 1;
   router.replace({ name: 'shopping-browse' });
@@ -215,6 +219,7 @@ function toggleCategory(category: any) {
       mainCategory: selectedMainCategory.value || undefined,
       brandId: selectedBrandId.value || undefined,
       brandModelId: selectedBrandModelId.value || undefined,
+      productTypeId: selectedProductTypeId.value || undefined,
       vendorId: selectedVendorId.value || undefined,
     },
   });
@@ -232,6 +237,7 @@ async function goToPage(page: number) {
       mainCategory: selectedMainCategory.value || undefined,
       brandId: selectedBrandId.value || undefined,
       brandModelId: selectedBrandModelId.value || undefined,
+      productTypeId: selectedProductTypeId.value || undefined,
       vendorId: selectedVendorId.value || undefined,
       page: String(page),
     },
@@ -240,13 +246,14 @@ async function goToPage(page: number) {
 }
 
 watch(
-  () => [route.query.q, route.query.category, route.query.mainCategory, route.query.brandId, route.query.brandModelId, route.query.page, route.query.vendorId].join('|'),
+  () => [route.query.q, route.query.category, route.query.mainCategory, route.query.brandId, route.query.brandModelId, route.query.productTypeId, route.query.page, route.query.vendorId].join('|'),
   () => {
     searchQuery.value = String(route.query.q || '');
     selectedCategory.value = String(route.query.category || '');
     selectedMainCategory.value = String(route.query.mainCategory || '');
     selectedBrandId.value = String(route.query.brandId || '');
     selectedBrandModelId.value = String(route.query.brandModelId || '');
+    selectedProductTypeId.value = String(route.query.productTypeId || '');
     selectedVendorId.value = String(route.query.vendorId || '');
     currentPage.value = Math.max(1, Number(route.query.page || 1));
     runSearch();

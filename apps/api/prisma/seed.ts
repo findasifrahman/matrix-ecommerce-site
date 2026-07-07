@@ -45,13 +45,7 @@ async function ensureUser(email: string, password: string, roleName: string, pho
 }
 
 async function syncHomepageVisualMenuSeed() {
-  await prisma.homepageVisualMenuItem.deleteMany({
-    where: {
-      section_key: {
-        in: ['women-hijab', 'furniture'],
-      },
-    },
-  });
+  await prisma.homepageVisualMenuItem.deleteMany({});
 
   for (const item of HOMEPAGE_VISUAL_MENU_SEED) {
     const existing = await prisma.homepageVisualMenuItem.findFirst({
@@ -81,6 +75,20 @@ async function syncHomepageVisualMenuSeed() {
     } else {
       await prisma.homepageVisualMenuItem.create({ data });
     }
+  }
+}
+
+async function syncHomepageHotDealsSeed(productIds: string[]) {
+  await prisma.homepageHotDeal.deleteMany({});
+
+  for (const [index, productId] of productIds.filter(Boolean).slice(0, 2).entries()) {
+    await prisma.homepageHotDeal.create({
+      data: {
+        product_id: productId,
+        sort_order: index + 1,
+        is_active: true,
+      },
+    });
   }
 }
 
@@ -167,7 +175,7 @@ async function syncLocalTaxonomySeed() {
   const gadgets = await upsertMainCategory('Gadgets', 2, false);
   const watches = await upsertMainCategory('Watches', 3, true);
 
-  await upsertProductTypes(phoneAccessories.id, ['Phone Cover', 'Screen Protector', 'Camera Lens Protector', 'Charger', 'Cable', 'Earphone', 'Power Bank', 'Holder & Stand']);
+  await upsertProductTypes(phoneAccessories.id, ['Phone Cover', 'Screen Protector', 'Camera Lens Protector', 'Charger', 'Cable', 'Earbud', 'Earphone', 'Power Bank', 'Holder & Stand']);
   await upsertProductTypes(gadgets.id, ['Bluetooth Speaker', 'Power Bank', 'Adapter', 'Cable Organizer', 'Smart Gadget']);
   await upsertProductTypes(watches.id, ['Smart Watch Strap', 'Watch Protector', 'Charging Dock', 'Watch Case']);
 
@@ -229,8 +237,8 @@ async function main() {
       whatsapp: '+8613999999999',
       email: 'seller@gmail.com',
       description: 'Premium Bangladesh shopping storefront with seller approval workflow.',
-      address_text: 'Room 13D, No. 29, Jianshe Sixth Road, Yuexiu District, Rongjin building, Taojin Guangzhou',
-      service_area: 'Guangzhou, China',
+      address_text: 'Mirpur, Pallabi Thana, Section -12, Dhaka-1216, Bangladesh.',
+      service_area: 'Dhaka, Bangladesh',
       verified: true,
       is_active: true,
     },
@@ -254,6 +262,7 @@ async function main() {
   const mainCategoryMap = new Map(mainCategories.map((item) => [item.slug, item.id]));
   const productTypes = await prisma.productType.findMany();
   const productTypeMap = new Map(productTypes.map((item) => [item.main_category_id + ':' + item.slug, item.id]));
+  const seededProducts = new Map<string, any>();
 
   const products = [
     {
@@ -343,8 +352,15 @@ async function main() {
       },
     });
     await syncProductSearchVector(savedProduct.id);
+    seededProducts.set(product.slug, savedProduct);
   }
   console.log('Sample products created');
+
+  await syncHomepageHotDealsSeed([
+    seededProducts.get('iphone-15-pro-max-clear-case')?.id,
+    seededProducts.get('type-c-fast-charger-25w')?.id,
+  ]);
+  console.log('Homepage hot items created');
 
   await prisma.homepageBanner.upsert({
     where: { id: 'matrix-ecommerce-home-banner' },

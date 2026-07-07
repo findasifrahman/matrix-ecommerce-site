@@ -180,8 +180,8 @@
               class="h-7 w-7 rounded-xl object-contain shadow-[0_6px_16px_rgba(0,0,0,0.26)] ring-1 ring-white/10 sm:h-8 sm:w-8"
             />
             <div class="hidden min-w-0 leading-tight sm:block">
-              <p class="truncate text-[14px] font-black tracking-tight text-white">ChinaBuyBD</p>
-              <p class="truncate text-[10px] font-medium text-white/65">Premium China sourcing</p>
+              <p class="truncate text-[14px] font-black tracking-tight text-white">Matrix Ecommerce</p>
+              <p class="truncate text-[10px] font-medium text-white/65">Premium smart shopping</p>
             </div>
           </router-link>
 
@@ -198,16 +198,14 @@
                 class="min-w-0 flex-1 bg-transparent px-2 text-[12px] font-medium text-white placeholder:text-white/55 focus:outline-none sm:px-3 md:placeholder:text-white/55"
               />
               <button
-                type="button"
-                @click="openImagePicker"
+                type="submit"
                 class="mr-1 inline-flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-white/12 text-white/70 transition-colors hover:bg-rose-500/20 hover:text-rose-200"
-                title="Search by image"
+                title="Search"
               >
-                <Camera class="h-4 w-4" />
+                <Search class="h-4 w-4" />
               </button>
             </div>
           </form>
-          <input ref="headerImageInput" type="file" accept="image/*" class="hidden" @change="handleHeaderImageSelect" />
 
           <!-- Desktop nav links -->
           <div class="hidden items-center gap-0.5 md:flex">
@@ -253,15 +251,15 @@
       <footer class="border-t border-white/10 bg-slate-950 px-4 py-6 text-white shadow-[0_-10px_28px_rgba(0,0,0,0.18)]">
         <div class="mx-auto grid max-w-7xl gap-5 sm:grid-cols-2 xl:grid-cols-[1.1fr_0.8fr_1fr]">
           <div class="space-y-2">
-            <p class="text-[10px] font-bold uppercase tracking-[0.34em] text-white/75">ChinaBuyBD</p>
-            <p class="text-[14px] font-black tracking-tight text-white">Premium China shopping concierge</p>
+            <p class="text-[10px] font-bold uppercase tracking-[0.34em] text-white/75">Matrix Ecommerce</p>
+            <p class="text-[14px] font-black tracking-tight text-white">Premium smart shopping concierge</p>
             <p class="text-[11px] leading-5 text-white/80">
-              Room 13D, No. 29, Jianshe Sixth Road, Yuexiu District, Rongjin Building, Taojin, Guangzhou
+              Mirpur, Pallabi Thana, Section -12, Dhaka-1216, Bangladesh.
             </p>
             <div class="flex flex-wrap gap-2 pt-1.5">
               <span class="inline-flex items-center gap-1.5 rounded-full border border-white/[0.14] bg-white/[0.08] px-2.5 py-1 text-[10px] font-medium text-white/[0.86]">
                 <MapPin class="h-3 w-3 text-teal-200" />
-                Guangzhou
+                Mirpur, Dhaka
               </span>
               <span class="inline-flex items-center gap-1.5 rounded-full border border-white/[0.14] bg-white/[0.08] px-2.5 py-1 text-[10px] font-medium text-white/[0.86]">
                 <Clock3 class="h-3 w-3 text-rose-200" />
@@ -329,21 +327,16 @@ import { useRouter } from 'vue-router';
 import Button from '../components/Button.vue';
 import {
   ArrowRight,
-  BadgeCheck,
-  Camera,
   ChevronRight,
   Clock3,
-  CreditCard,
   Facebook,
   Gem,
   Headphones,
   Instagram,
-  Mail,
   MapPin,
   Menu,
   MessageCircle,
   Package,
-  Phone,
   Search,
   Shield,
   Shirt,
@@ -377,7 +370,6 @@ defineEmits<{
 
 const router = useRouter();
 const searchQuery = ref('');
-const headerImageInput = ref<HTMLInputElement | null>(null);
 const categories = ref<any[]>([]);
 const expandedCategorySlug = ref('');
 const drawerOpen = ref(false);
@@ -395,7 +387,6 @@ const iconMap: Record<string, any> = {
   shirt: Shirt,
   home: Home,
   truck: Truck,
-  camera: Camera,
   headphones: Headphones,
   'gamepad-2': Gamepad2,
   'book-open': BookOpen,
@@ -434,33 +425,6 @@ function categoryBadgeStyle(seed: string) {
   };
 }
 
-const ecommerceHighlights = [
-  {
-    label: 'Secure checkout',
-    description: 'Trusted payments and order handling.',
-    icon: CreditCard,
-    iconStyle: { background: 'rgba(255,255,255,0.10)', color: '#fef2f2' },
-  },
-  {
-    label: 'Fast fulfillment',
-    description: 'Shipping coordination with live support.',
-    icon: Truck,
-    iconStyle: { background: 'rgba(255,255,255,0.10)', color: '#a7f3d0' },
-  },
-  {
-    label: 'Quality assurance',
-    description: 'Curated sourcing checks before dispatch.',
-    icon: BadgeCheck,
-    iconStyle: { background: 'rgba(255,255,255,0.10)', color: '#fde68a' },
-  },
-  {
-    label: 'Customer care',
-    description: 'Real people available when you need them.',
-    icon: Headphones,
-    iconStyle: { background: 'rgba(255,255,255,0.10)', color: '#c7f9f1' },
-  },
-];
-
 const socialChips = [
   { label: 'Facebook', note: 'Brand updates and promotions', icon: Facebook, badgeStyle: { color: '#1877f2' } },
   { label: 'Instagram', note: 'Lifestyle and product inspiration', icon: Instagram, badgeStyle: { color: '#e4405f' } },
@@ -476,7 +440,7 @@ function regularChildren(category: any) {
   return Array.isArray(category?.productTypes) ? category.productTypes : [];
 }
 
-function brandChildren(category: any) {
+function brandChildren(_category: any): any[] {
   return [];
 }
 
@@ -493,30 +457,6 @@ function submitSearch() {
 function openShopping() {
   closeDrawer();
   router.push('/shopping');
-}
-
-function openImagePicker() {
-  headerImageInput.value?.click();
-}
-
-function fileToDataUrl(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(String(reader.result || ''));
-    reader.onerror = () => reject(new Error('Failed to read image file'));
-    reader.readAsDataURL(file);
-  });
-}
-
-async function handleHeaderImageSelect(event: Event) {
-  const target = event.target as HTMLInputElement;
-  const file = target.files?.[0];
-  if (!file) return;
-  const dataUrl = await fileToDataUrl(file);
-  const storageKey = `shopping-image-search-${Date.now()}`;
-  sessionStorage.setItem(storageKey, dataUrl);
-  router.push({ path: '/shopping/browse', query: { imageSearchKey: storageKey } });
-  target.value = '';
 }
 
 function openCategory(slug: string) {

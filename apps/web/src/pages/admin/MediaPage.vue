@@ -198,7 +198,7 @@
           </label>
           <Input
             v-model="uploadTags"
-            placeholder="e.g., guangzhou, hotel, exterior"
+            placeholder="e.g., dhaka, hotel, exterior"
           />
           <p class="text-xs text-slate-500 mt-1">Separate tags with commas</p>
         </div>
@@ -280,7 +280,7 @@
           </label>
           <Input
             v-model="editForm.tagsText"
-            placeholder="e.g., guangzhou, hotel, exterior"
+            placeholder="e.g., Dhaka, hotel, exterior"
           />
           <p class="text-xs text-slate-500 mt-1">Separate tags with commas</p>
         </div>

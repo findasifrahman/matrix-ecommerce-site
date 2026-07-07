@@ -7,6 +7,7 @@
       </div>
       <div class="flex gap-2">
         <Button variant="ghost" @click="router.push('/admin/homepage')">Banners</Button>
+        <Button variant="ghost" @click="router.push('/admin/homepage-hot-deals')">Hot Items</Button>
         <Button variant="primary" @click="openAddModal">
           <Plus class="mr-2 h-4 w-4" />
           Add Offer

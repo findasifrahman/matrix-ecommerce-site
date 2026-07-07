@@ -1,6 +1,16 @@
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import { prisma } from '../lib/prisma.js';
-import { getCategories, getCuratedHomeSections, getHotItems, getItemDetail, getVendorInfo, searchByKeyword, searchByVendorId } from '../modules/shopping/shopping.service.js';
+import {
+  getCategories,
+  getCuratedHomeSections,
+  getHomepageCollections,
+  getHomepageHotDeals,
+  getHotItems,
+  getItemDetail,
+  getVendorInfo,
+  searchByKeyword,
+  searchByVendorId,
+} from '../modules/shopping/shopping.service.js';
 import { getHotItemsSchema, searchByKeywordSchema } from '../modules/shopping/shopping.schemas.js';
 
 function isDatabaseUnavailable(error: any): boolean {
@@ -85,7 +95,7 @@ function buildHomepageVisualMenuSections(rows: any[]) {
       ...section,
       items: section.items
         .sort((a: any, b: any) => a.sortOrder - b.sortOrder || String(a.title).localeCompare(String(b.title)))
-        .slice(0, 5),
+        .slice(0, 8),
     }));
 }
 
@@ -112,6 +122,14 @@ export default async function publicShoppingRoutes(fastify: FastifyInstance) {
 
   fastify.get('/shopping/home-curated', async () => {
     return getCuratedHomeSections();
+  });
+
+  fastify.get('/shopping/home-collections', async () => {
+    return getHomepageCollections();
+  });
+
+  fastify.get('/shopping/hot-deals', async () => {
+    return getHomepageHotDeals();
   });
 
   fastify.get('/shopping/search', async (request: FastifyRequest, reply: FastifyReply) => {

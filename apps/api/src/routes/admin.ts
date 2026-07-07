@@ -1832,6 +1832,164 @@ export default async function adminRoutes(fastify: FastifyInstance) {
     return { message: 'Homepage offer deleted' };
   });
 
+  fastify.get('/homepage/hot-deals', { preHandler: auth }, async () => {
+    return prisma.homepageHotDeal.findMany({
+      include: {
+        product: {
+          include: {
+            coverAsset: true,
+            seller: {
+              include: { sellerProfile: true },
+            },
+            category: true,
+            mainCategory: true,
+            taxonomyBrand: true,
+            brandModel: true,
+            productType: true,
+          },
+        },
+      },
+      orderBy: [{ sort_order: 'asc' }, { created_at: 'asc' }],
+    });
+  });
+
+  fastify.post('/homepage/hot-deals', { preHandler: auth }, async (request: FastifyRequest, reply: FastifyReply) => {
+    const body = z.object({
+      product_id: z.string().min(1),
+      sort_order: z.number().int().optional(),
+      is_active: z.boolean().optional(),
+    }).parse(request.body);
+
+    const product = await prisma.product.findUnique({
+      where: { id: body.product_id },
+      select: { id: true },
+    });
+    if (!product) {
+      return reply.status(404).send({ error: 'Product not found' });
+    }
+
+    const shouldBeActive = body.is_active ?? true;
+    if (shouldBeActive) {
+      const activeCount = await prisma.homepageHotDeal.count({
+        where: { is_active: true },
+      });
+      if (activeCount >= 2) {
+        return reply.status(400).send({ error: 'You can only keep two hot items active at a time.' });
+      }
+    }
+
+    try {
+      const deal = await prisma.homepageHotDeal.create({
+        data: {
+          product_id: body.product_id,
+          sort_order: body.sort_order ?? 0,
+          is_active: shouldBeActive,
+        },
+        include: {
+          product: {
+            include: {
+              coverAsset: true,
+              seller: {
+                include: { sellerProfile: true },
+              },
+              category: true,
+              mainCategory: true,
+              taxonomyBrand: true,
+              brandModel: true,
+              productType: true,
+            },
+          },
+        },
+      });
+
+      return reply.status(201).send(deal);
+    } catch (error: any) {
+      if (String(error?.code || '') === 'P2002') {
+        return reply.status(409).send({ error: 'This product is already assigned to hot items.' });
+      }
+      throw error;
+    }
+  });
+
+  fastify.put('/homepage/hot-deals/:id', { preHandler: auth }, async (request: FastifyRequest, reply: FastifyReply) => {
+    const { id } = request.params as { id: string };
+    const existing = await prisma.homepageHotDeal.findUnique({ where: { id } });
+    if (!existing) {
+      return reply.status(404).send({ error: 'Homepage hot item not found' });
+    }
+
+    const body = z.object({
+      product_id: z.string().min(1).optional(),
+      sort_order: z.number().int().optional(),
+      is_active: z.boolean().optional(),
+    }).parse(request.body);
+
+    if (body.product_id) {
+      const product = await prisma.product.findUnique({
+        where: { id: body.product_id },
+        select: { id: true },
+      });
+      if (!product) {
+        return reply.status(404).send({ error: 'Product not found' });
+      }
+    }
+
+    const nextActive = body.is_active ?? existing.is_active;
+    if (!existing.is_active && nextActive) {
+      const activeCount = await prisma.homepageHotDeal.count({
+        where: {
+          is_active: true,
+          NOT: { id },
+        },
+      });
+      if (activeCount >= 2) {
+        return reply.status(400).send({ error: 'You can only keep two hot items active at a time.' });
+      }
+    }
+
+    try {
+      return await prisma.homepageHotDeal.update({
+        where: { id },
+        data: {
+          product_id: body.product_id ?? undefined,
+          sort_order: body.sort_order !== undefined ? Number(body.sort_order) : undefined,
+          is_active: body.is_active ?? undefined,
+        },
+        include: {
+          product: {
+            include: {
+              coverAsset: true,
+              seller: {
+                include: { sellerProfile: true },
+              },
+              category: true,
+              mainCategory: true,
+              taxonomyBrand: true,
+              brandModel: true,
+              productType: true,
+            },
+          },
+        },
+      });
+    } catch (error: any) {
+      if (String(error?.code || '') === 'P2002') {
+        return reply.status(409).send({ error: 'This product is already assigned to hot items.' });
+      }
+      throw error;
+    }
+  });
+
+  fastify.delete('/homepage/hot-deals/:id', { preHandler: auth }, async (request: FastifyRequest, reply: FastifyReply) => {
+    const { id } = request.params as { id: string };
+    const existing = await prisma.homepageHotDeal.findUnique({ where: { id } });
+    if (!existing) {
+      return reply.status(404).send({ error: 'Homepage hot item not found' });
+    }
+
+    await prisma.homepageHotDeal.delete({ where: { id } });
+    return { message: 'Homepage hot item deleted' };
+  });
+
   fastify.get('/homepage/visual-menu', { preHandler: auth }, async () => {
     return prisma.homepageVisualMenuItem.findMany({
       orderBy: [{ section_sort_order: 'asc' }, { sort_order: 'asc' }, { created_at: 'asc' }],
