@@ -9,20 +9,35 @@ Both services can be deployed on Railway from the same GitHub repo.
 
 ## Recommended Railway model
 
-This repo is a shared monorepo, so both services should stay connected to the repo root.
+This repo is a shared monorepo, and both services can stay on Root Directory `/`.
 
-The most reliable setup for this repository is:
+Railway is currently reading a root config file for deploy commands, so this repo now includes a root dispatcher file:
 
-1. Keep Root Directory as `/`
-2. Set Custom Build Command and Custom Start Command in each Railway service
-3. Do not rely on Railpack auto-detecting a start command from the workspace root
+- [railway.toml](/C:/Users/asif/Desktop/matrix_ecommerce/railway.toml)
 
-Optional service config files exist here:
+That file chooses backend or frontend commands automatically from:
 
-- [apps/api/railway.json](/C:/Users/asif/Desktop/matrix_ecommerce/apps/api/railway.json)
-- [apps/web/railway.json](/C:/Users/asif/Desktop/matrix_ecommerce/apps/web/railway.json)
+- `RAILWAY_SERVICE_NAME`, or
+- `APP_KIND` if you set it manually in Railway variables
 
-But if Railway is not clearly using those files, set the commands manually in the dashboard. That is the fastest fix for the `No start command detected` error.
+Supported values:
+
+- backend service name contains `backend` or `api`
+- frontend service name contains `frontend` or `web`
+
+If your Railway service names are unusual, set:
+
+```env
+APP_KIND=backend
+```
+
+or:
+
+```env
+APP_KIND=frontend
+```
+
+This avoids Railpack trying to auto-detect a root start command.
 
 ## Important backend boot fix
 
@@ -67,14 +82,13 @@ Use these values in Railway:
 
 - Root Directory: `/`
 - Public Networking: enabled
-- Custom Build Command: `pnpm railway:build:api`
-- Custom Start Command: `pnpm railway:start:api`
+- Config as Code file path: `/railway.toml`
 
-If you want to use config-as-code instead of dashboard commands, set:
+If your service name does not clearly include `backend` or `api`, add:
 
-- Config as Code file path: `/apps/api/railway.json`
+- `APP_KIND=backend`
 
-The commands above map to:
+The root dispatcher maps the backend to:
 
 ```bash
 pnpm --filter @matrix-ecommerce/api db:generate && pnpm --filter @matrix-ecommerce/api build
@@ -157,14 +171,13 @@ Use these values in Railway:
 
 - Root Directory: `/`
 - Public Networking: enabled
-- Custom Build Command: `pnpm railway:build:web`
-- Custom Start Command: `pnpm railway:start:web`
+- Config as Code file path: `/railway.toml`
 
-If you want to use config-as-code instead of dashboard commands, set:
+If your service name does not clearly include `frontend` or `web`, add:
 
-- Config as Code file path: `/apps/web/railway.json`
+- `APP_KIND=frontend`
 
-The commands above map to:
+The root dispatcher maps the frontend to:
 
 ```bash
 pnpm --filter @matrix-ecommerce/web build
@@ -198,11 +211,12 @@ For both services:
 
 1. Connect the same GitHub repo.
 2. Keep Root Directory as `/`.
-3. Set explicit Custom Build Command and Custom Start Command.
+3. Use Config as Code file path `/railway.toml`.
 4. Generate a public domain for each service.
 5. Leave restart policy as `ON_FAILURE`.
+6. If a service name does not include `backend` or `frontend`, set `APP_KIND` explicitly.
 
-If the deploy page says `No start command detected`, it means Railway is still falling back to auto-detection and your custom command was not saved or not applied.
+If the deploy page shows values coming from `/railway.toml`, that is now expected.
 
 Helpful watch paths:
 
