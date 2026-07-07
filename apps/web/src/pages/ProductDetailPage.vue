@@ -101,6 +101,7 @@
               </div>
             </section>
 
+            <!--
             <section class="rounded-[28px] border border-slate-200 bg-[linear-gradient(90deg,#effdf7,#fff7e5)] p-5 shadow-[0_16px_38px_rgba(15,23,42,0.04)]">
               <div class="flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.28em] text-slate-800">
                 <Truck class="h-4 w-4 text-teal-600" />
@@ -116,6 +117,7 @@
                 </div>
               </div>
             </section>
+          -->
           </div>
 
           <aside class="space-y-4 self-start 2xl:sticky 2xl:top-4">
@@ -437,13 +439,13 @@
 
         <div
           v-if="lightboxOpen"
-          class="fixed inset-0 z-[120] flex items-center justify-center bg-slate-950/88 p-4 backdrop-blur-sm"
-          @click.self="closeLightbox"
+          class="fixed inset-0 z-[120] flex items-center justify-center bg-black p-4"
+          @click="closeLightbox"
         >
           <button
             type="button"
             class="absolute right-5 top-5 flex h-12 w-12 items-center justify-center rounded-full bg-white/10 text-white transition hover:bg-white/20"
-            @click="closeLightbox"
+            @click.stop="closeLightbox"
           >
             <X class="h-6 w-6" />
           </button>
@@ -455,7 +457,10 @@
           >
             <ChevronLeft class="h-7 w-7" />
           </button>
-          <div class="relative flex max-h-[92vh] w-full max-w-[1400px] items-center justify-center">
+          <div
+            class="relative flex max-h-[92vh] w-full max-w-[1400px] items-center justify-center"
+            @click.stop
+          >
             <video
               v-if="activeMedia?.type === 'video'"
               :src="activeMedia.src"
