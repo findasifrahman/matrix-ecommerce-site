@@ -1,26 +1,6 @@
 [build]
 builder = "NIXPACKS"
-buildCommand = """
-SERVICE_NAME=$(printf '%s' "${APP_KIND:-$RAILWAY_SERVICE_NAME}" | tr '[:upper:]' '[:lower:]')
-if [ -z "$SERVICE_NAME" ]; then
-  echo "Railway service name was not provided. Set APP_KIND=backend or APP_KIND=frontend in the service variables."
-  exit 1
-fi
-
-case "$SERVICE_NAME" in
-  *back*|*api*)
-    pnpm install --frozen-lockfile && pnpm railway:build:api
-    ;;
-  *front*|*web*)
-    pnpm install --frozen-lockfile && pnpm railway:build:web
-    ;;
-  *)
-    echo "Unsupported Railway service name: $SERVICE_NAME"
-    echo "Rename the service to include backend/api or frontend/web, or set APP_KIND=backend or APP_KIND=frontend."
-    exit 1
-    ;;
-esac
-"""
+buildCommand = "sh -lc 'SERVICE_NAME=$(printf \"%s\" \"${APP_KIND:-$RAILWAY_SERVICE_NAME}\" | tr \"[:upper:]\" \"[:lower:]\"); if [ -z \"$SERVICE_NAME\" ]; then echo \"Railway service name was not provided. Set APP_KIND=backend or APP_KIND=frontend in the service variables.\"; exit 1; fi; case \"$SERVICE_NAME\" in *back*|*api*) pnpm railway:build:api ;; *front*|*web*) pnpm railway:build:web ;; *) echo \"Unsupported Railway service name: $SERVICE_NAME\"; echo \"Rename the service to include backend/api or frontend/web, or set APP_KIND=backend or APP_KIND=frontend.\"; exit 1 ;; esac'"
 watchPatterns = [
   "/apps/api/**",
   "/apps/web/**",
@@ -32,26 +12,6 @@ watchPatterns = [
 ]
 
 [deploy]
-startCommand = """
-SERVICE_NAME=$(printf '%s' "${APP_KIND:-$RAILWAY_SERVICE_NAME}" | tr '[:upper:]' '[:lower:]')
-if [ -z "$SERVICE_NAME" ]; then
-  echo "Railway service name was not provided. Set APP_KIND=backend or APP_KIND=frontend in the service variables."
-  exit 1
-fi
-
-case "$SERVICE_NAME" in
-  *back*|*api*)
-    pnpm railway:start:api
-    ;;
-  *front*|*web*)
-    pnpm railway:start:web
-    ;;
-  *)
-    echo "Unsupported Railway service name: $SERVICE_NAME"
-    echo "Rename the service to include backend/api or frontend/web, or set APP_KIND=backend or APP_KIND=frontend."
-    exit 1
-    ;;
-esac
-"""
+startCommand = "sh -lc 'SERVICE_NAME=$(printf \"%s\" \"${APP_KIND:-$RAILWAY_SERVICE_NAME}\" | tr \"[:upper:]\" \"[:lower:]\"); if [ -z \"$SERVICE_NAME\" ]; then echo \"Railway service name was not provided. Set APP_KIND=backend or APP_KIND=frontend in the service variables.\"; exit 1; fi; case \"$SERVICE_NAME\" in *back*|*api*) exec pnpm railway:start:api ;; *front*|*web*) exec pnpm railway:start:web ;; *) echo \"Unsupported Railway service name: $SERVICE_NAME\"; echo \"Rename the service to include backend/api or frontend/web, or set APP_KIND=backend or APP_KIND=frontend.\"; exit 1 ;; esac'"
 restartPolicyType = "ON_FAILURE"
 restartPolicyMaxRetries = 10

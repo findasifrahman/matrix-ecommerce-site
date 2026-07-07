@@ -11,7 +11,7 @@
     "railway:build:api": "pnpm --filter @matrix-ecommerce/api db:generate && pnpm --filter @matrix-ecommerce/api build",
     "railway:start:api": "pnpm --filter @matrix-ecommerce/api start:railway",
     "railway:build:web": "pnpm --filter @matrix-ecommerce/web build",
-    "railway:start:web": "bash apps/web/start.sh",
+    "railway:start:web": "sh apps/web/start.sh",
     "lint": "pnpm --recursive lint",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,vue,json,md}\"",
     "db:generate": "pnpm --filter @matrix-ecommerce/api db:generate",
