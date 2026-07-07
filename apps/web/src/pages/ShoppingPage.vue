@@ -101,7 +101,7 @@
             <h2 class="mt-1 text-xl font-black tracking-tight text-slate-950">Shop by category</h2>
           </div>
           <span class="rounded-full bg-slate-100 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-500">
-            Auto scroll
+            
           </span>
         </div>
 
