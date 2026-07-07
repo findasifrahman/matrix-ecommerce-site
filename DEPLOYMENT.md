@@ -9,14 +9,20 @@ Both services can be deployed on Railway from the same GitHub repo.
 
 ## Recommended Railway model
 
-This repo is a shared monorepo, so both services should stay connected to the repo root and use separate Railway service configs.
+This repo is a shared monorepo, so both services should stay connected to the repo root.
 
-Use these config files:
+The most reliable setup for this repository is:
+
+1. Keep Root Directory as `/`
+2. Set Custom Build Command and Custom Start Command in each Railway service
+3. Do not rely on Railpack auto-detecting a start command from the workspace root
+
+Optional service config files exist here:
 
 - [apps/api/railway.json](/C:/Users/asif/Desktop/matrix_ecommerce/apps/api/railway.json)
 - [apps/web/railway.json](/C:/Users/asif/Desktop/matrix_ecommerce/apps/web/railway.json)
 
-Do not use a root-level `railway.json` or `railway.toml` for this setup. A repo-level Railway config overrides dashboard build and deploy settings, which causes both services to inherit the same commands.
+But if Railway is not clearly using those files, set the commands manually in the dashboard. That is the fastest fix for the `No start command detected` error.
 
 ## Important backend boot fix
 
@@ -60,18 +66,18 @@ Both app services should point to the same GitHub repo.
 Use these values in Railway:
 
 - Root Directory: `/`
-- Config as Code file path: `/apps/api/railway.json`
 - Public Networking: enabled
+- Custom Build Command: `pnpm railway:build:api`
+- Custom Start Command: `pnpm railway:start:api`
 
-Backend build command from config:
+If you want to use config-as-code instead of dashboard commands, set:
+
+- Config as Code file path: `/apps/api/railway.json`
+
+The commands above map to:
 
 ```bash
-pnpm install --frozen-lockfile && pnpm --filter @matrix-ecommerce/api db:generate && pnpm --filter @matrix-ecommerce/api build
-```
-
-Backend start command from config:
-
-```bash
+pnpm --filter @matrix-ecommerce/api db:generate && pnpm --filter @matrix-ecommerce/api build
 pnpm --filter @matrix-ecommerce/api start:railway
 ```
 
@@ -150,18 +156,18 @@ That script uses `--force-reset`.
 Use these values in Railway:
 
 - Root Directory: `/`
-- Config as Code file path: `/apps/web/railway.json`
 - Public Networking: enabled
+- Custom Build Command: `pnpm railway:build:web`
+- Custom Start Command: `pnpm railway:start:web`
 
-Frontend build command from config:
+If you want to use config-as-code instead of dashboard commands, set:
+
+- Config as Code file path: `/apps/web/railway.json`
+
+The commands above map to:
 
 ```bash
-pnpm install --frozen-lockfile && pnpm --filter @matrix-ecommerce/web build
-```
-
-Frontend start command from config:
-
-```bash
+pnpm --filter @matrix-ecommerce/web build
 bash apps/web/start.sh
 ```
 
@@ -192,9 +198,11 @@ For both services:
 
 1. Connect the same GitHub repo.
 2. Keep Root Directory as `/`.
-3. Set the Config as Code file path to the service-specific file.
+3. Set explicit Custom Build Command and Custom Start Command.
 4. Generate a public domain for each service.
 5. Leave restart policy as `ON_FAILURE`.
+
+If the deploy page says `No start command detected`, it means Railway is still falling back to auto-detection and your custom command was not saved or not applied.
 
 Helpful watch paths:
 
