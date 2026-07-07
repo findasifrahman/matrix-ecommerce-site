@@ -703,6 +703,8 @@ export default async function userRoutes(fastify: FastifyInstance) {
       shipping_address_id: z.string().min(1),
       notes: z.string().optional(),
       shipping_method: z.string().optional(),
+      shipping_charge_id: z.string().optional(),
+      payment_method: z.enum(['cash_on_delivery']).optional(),
       currency: z.string().optional(),
       coupon_code: z.string().optional(),
       items: z.array(checkoutItemSchema).optional(),
@@ -873,8 +875,21 @@ export default async function userRoutes(fastify: FastifyInstance) {
 
     const currency = body.currency || 'BDT';
     const subtotal = resolvedItems.reduce((sum, item) => sum + item.price_snapshot * item.qty, 0);
-    const shippingMethod = body.shipping_method || 'local';
-    const shippingFee = 0;
+    const shippingCharges = await prisma.shippingCharge.findMany({
+      where: { is_active: true },
+      orderBy: [{ cost: 'asc' }, { delivery_area: 'asc' }],
+      select: { id: true, delivery_area: true, cost: true },
+    });
+    const selectedShippingCharge = shippingCharges.find((item) => item.id === body.shipping_charge_id)
+      || shippingCharges.find((item) => item.delivery_area === 'outside_dhaka')
+      || shippingCharges[0]
+      || null;
+    if (!selectedShippingCharge) {
+      return reply.status(400).send({ error: 'No shipping charge is configured. Please contact the admin team.' });
+    }
+    const shippingMethod = body.shipping_method || selectedShippingCharge.delivery_area;
+    const shippingFee = Number(selectedShippingCharge.cost || 0);
+    const paymentMethod = body.payment_method || 'cash_on_delivery';
     const couponResult = body.coupon_code
       ? await evaluateCoupon(prisma, {
           code: body.coupon_code,
@@ -908,12 +923,13 @@ export default async function userRoutes(fastify: FastifyInstance) {
         finalDiscountAmount = freshResult.discountAmount;
       }
 
-      const createdOrder = await tx.order.create({
+        const createdOrder = await tx.order.create({
         data: {
           order_number: orderNumber,
           user_id: req.user.id,
-          status: 'pending_payment',
-          payment_status: 'unsubmitted',
+          status: 'pending_purchase',
+          payment_status: 'cash_on_delivery',
+          payment_method: paymentMethod,
           currency,
           subtotal,
           discount_amount: finalDiscountAmount,

@@ -176,11 +176,11 @@
           <router-link to="/shopping" class="flex flex-shrink-0 items-center gap-2">
             <img
               src="/logo_verticle.png"
-              alt="BridgeChina"
+              alt="MatrixShop"
               class="h-7 w-7 rounded-xl object-contain shadow-[0_6px_16px_rgba(0,0,0,0.26)] ring-1 ring-white/10 sm:h-8 sm:w-8"
             />
             <div class="hidden min-w-0 leading-tight sm:block">
-              <p class="truncate text-[14px] font-black tracking-tight text-white">Matrix Ecommerce</p>
+              <p class="truncate text-[14px] font-black tracking-tight text-white">MatrixShop</p>
               <p class="truncate text-[10px] font-medium text-white/65">Premium smart shopping</p>
             </div>
           </router-link>
@@ -252,7 +252,7 @@
         <div class="mx-auto grid max-w-7xl gap-5 sm:grid-cols-2 xl:grid-cols-[1.1fr_0.8fr_1fr]">
           <div class="space-y-2">
             <p class="text-[10px] font-bold uppercase tracking-[0.34em] text-white/75">Matrix Ecommerce</p>
-            <p class="text-[14px] font-black tracking-tight text-white">Premium smart shopping concierge</p>
+            <p class="text-[14px] font-black tracking-tight text-white">MatrixShop</p>
             <p class="text-[11px] leading-5 text-white/80">
               Mirpur, Pallabi Thana, Section -12, Dhaka-1216, Bangladesh.
             </p>
@@ -281,6 +281,18 @@
               </router-link>
               <router-link class="flex items-center justify-between rounded-[14px] px-2.5 py-2 text-white/90 transition-colors hover:bg-white/[0.08] hover:text-white" to="/contact">
                 <span>Contact</span>
+                <ArrowRight class="h-3.5 w-3.5 text-teal-200" />
+              </router-link>
+              <router-link class="flex items-center justify-between rounded-[14px] px-2.5 py-2 text-white/90 transition-colors hover:bg-white/[0.08] hover:text-white" to="/terms-and-conditions">
+                <span>Terms & Conditions</span>
+                <ArrowRight class="h-3.5 w-3.5 text-teal-200" />
+              </router-link>
+              <router-link class="flex items-center justify-between rounded-[14px] px-2.5 py-2 text-white/90 transition-colors hover:bg-white/[0.08] hover:text-white" to="/privacy-policy">
+                <span>Privacy Policy</span>
+                <ArrowRight class="h-3.5 w-3.5 text-teal-200" />
+              </router-link>
+              <router-link class="flex items-center justify-between rounded-[14px] px-2.5 py-2 text-white/90 transition-colors hover:bg-white/[0.08] hover:text-white" to="/returns-and-refunds">
+                <span>Returns & Refunds</span>
                 <ArrowRight class="h-3.5 w-3.5 text-teal-200" />
               </router-link>
             </div>

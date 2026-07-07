@@ -11,10 +11,6 @@
           Back to shopping
         </button>
         <p class="text-xs font-bold uppercase tracking-[0.24em] text-slate-500">Checkout</p>
-        <h1 class="mt-2 text-3xl font-black tracking-tight text-slate-900 sm:text-4xl">Review your order</h1>
-        <p class="mt-2 max-w-2xl text-sm leading-6 text-slate-600 sm:text-base">
-          Choose a delivery address and place the order. Payment proof can be uploaded later from your orders page.
-        </p>
       </div>
 
       <div v-if="isEmpty" class="grid min-h-[55vh] place-items-center rounded-[2rem] border border-slate-200 bg-white p-8 shadow-[0_18px_45px_rgba(15,23,42,0.05)]">
@@ -164,7 +160,7 @@
             <div class="flex items-start justify-between gap-4">
               <div>
                 <h2 class="text-2xl font-black text-slate-950">Contact</h2>
-                <p class="mt-1 text-sm text-slate-500">Use email code now. SMS code can be enabled later from the shared auth module.</p>
+                <p class="mt-1 text-sm text-slate-500">Sign in with email, then confirm your delivery address for cash on delivery.</p>
               </div>
               <button
                 v-if="!authStore.isAuthenticated"
@@ -214,6 +210,13 @@
                   label="Saved address"
                   :options="addressOptions"
                   placeholder="Select an address"
+                />
+
+                <Select
+                  v-model="selectedShippingChargeId"
+                  label="Delivery area"
+                  :options="shippingChargeOptions"
+                  placeholder="Select a delivery area"
                 />
 
                 <form v-if="addresses.length === 0" class="space-y-3" @submit.prevent="handleAddAddress">
@@ -278,7 +281,7 @@
                 Add your phone and delivery address on this page before placing the order.
               </p>
               <p v-else class="text-sm leading-6 text-slate-500">
-                Payment is not collected now. You can upload the payment slip from your orders page after checkout.
+                Cash on delivery is active. The delivery fee updates from the selected area below.
               </p>
 
               <Button
@@ -321,6 +324,35 @@
                   Use the Contact form on this page or open the full sign-in page.
                 </p>
               </div>
+
+              <Select
+                v-model="selectedShippingChargeId"
+                label="Delivery area"
+                :options="shippingChargeOptions"
+                placeholder="Select a delivery area"
+              />
+
+              <div class="rounded-2xl border border-rose-200 bg-rose-50 p-4">
+                <div class="flex items-start justify-between gap-3">
+                  <div>
+                    <p class="text-sm font-bold text-slate-900">Payment method</p>
+                    <p class="mt-1 text-xs leading-5 text-slate-600">Recommended method</p>
+                  </div>
+                  <span class="rounded-full border border-rose-300 bg-white px-3 py-1 text-[11px] font-bold text-rose-600">
+                    Selected
+                  </span>
+                </div>
+                <div class="mt-3 rounded-2xl border border-rose-200 bg-white p-4">
+                  <p class="text-sm font-bold text-slate-900">Cash on Delivery</p>
+                  <p class="mt-2 text-xs leading-6 text-slate-600">Pay the courier when the parcel reaches your address.</p>
+                  <ul class="mt-3 list-disc space-y-1 pl-5 text-xs leading-6 text-slate-600">
+                    <li>Verify the order number before receiving the parcel.</li>
+                    <li>Confirm delivery area charges before placing the order.</li>
+                    <li>Keep your phone active so the courier can contact you.</li>
+                  </ul>
+                </div>
+              </div>
+
               <Input v-model="notes" label="Order notes" placeholder="Special instructions" />
             </div>
 
@@ -332,6 +364,10 @@
               <div class="flex items-center justify-between text-sm">
                 <span class="text-slate-600">Product total</span>
                 <span class="font-bold text-slate-900">{{ formatPrice(subtotal) }}</span>
+              </div>
+              <div class="flex items-center justify-between text-sm">
+                <span class="text-slate-600">Cash on delivery fee</span>
+                <span class="font-bold text-slate-900">{{ formatPrice(shippingFee) }}</span>
               </div>
               <div class="rounded-2xl border border-slate-200 bg-white p-3">
                 <label class="mb-2 block text-xs font-bold uppercase tracking-[0.18em] text-slate-500">Coupon code</label>
@@ -354,11 +390,23 @@
               </div>
               <div class="border-t border-slate-200 pt-3 text-sm font-semibold text-slate-900">
                 <div class="flex items-center justify-between">
-                  <span>Total</span>
+                  <span>Total payment</span>
                   <span class="text-teal-700">{{ formatPrice(grandTotal) }}</span>
                 </div>
               </div>
             </div>
+
+            <label class="mt-4 flex items-start gap-3 rounded-2xl border border-slate-200 bg-white p-4 text-xs leading-6 text-slate-600">
+              <input v-model="acceptedTerms" type="checkbox" class="mt-1 h-4 w-4 rounded border-slate-300 text-rose-600 focus:ring-rose-500" />
+              <span>
+                I agree to the
+                <router-link to="/terms-and-conditions" class="font-semibold text-rose-600 hover:underline">Terms & Conditions</router-link>,
+                <router-link to="/privacy-policy" class="font-semibold text-rose-600 hover:underline">Privacy Policy</router-link>,
+                and
+                <router-link to="/returns-and-refunds" class="font-semibold text-rose-600 hover:underline">Return & Refund Policy</router-link>
+                of MatrixShop.
+              </span>
+            </label>
 
             <div v-if="orderWarnings.length" class="mt-4 space-y-2 rounded-2xl border border-rose-200 bg-rose-50 p-4 text-xs text-rose-700 lg:hidden">
               <div v-for="warning in orderWarnings" :key="warning">{{ warning }}</div>
@@ -383,7 +431,7 @@
               Add a shipping address on this page before placing the order.
             </p>
             <p v-else class="mt-3 text-center text-xs leading-6 text-slate-500 lg:hidden">
-              Payment is not collected now. You can upload the payment slip from your orders page after checkout.
+              Cash on delivery is active for this order.
             </p>
           </div>
         </aside>
@@ -397,8 +445,8 @@
               <p class="mt-1 text-sm text-white/75">You place the order with your selected address.</p>
             </div>
             <div class="rounded-2xl bg-white/10 p-4">
-              <p class="text-sm font-semibold">2. Payment slip</p>
-              <p class="mt-1 text-sm text-white/75">Upload a cash slip later from your orders page.</p>
+              <p class="text-sm font-semibold">2. Cash on delivery</p>
+              <p class="mt-1 text-sm text-white/75">Pay the courier when your order reaches your address.</p>
             </div>
             <div class="rounded-2xl bg-white/10 p-4">
               <p class="text-sm font-semibold">3. Shipping</p>
@@ -450,6 +498,9 @@ const syncingCart = ref(false);
 const applyingCoupon = ref(false);
 const couponCode = ref('');
 const appliedCoupon = ref<any>(null);
+const shippingCharges = ref<any[]>([]);
+const selectedShippingChargeId = ref('');
+const acceptedTerms = ref(false);
 const checkoutPhone = ref(authStore.user?.phone || '');
 const checkoutPhoneError = ref('');
 const removeItemConfirmOpen = ref(false);
@@ -523,6 +574,15 @@ const couponDiscount = computed(() => {
 });
 
 const grandTotal = computed(() => Math.max(0, subtotal.value - couponDiscount.value) + (shippingFee.value || 0));
+const shippingChargeOptions = computed(() =>
+  shippingCharges.value.map((item: any) => ({
+    value: item.id,
+    label: `${item.delivery_area} - ${formatPrice(Number(item.cost || 0))}`,
+  }))
+);
+const selectedShippingCharge = computed(() =>
+  shippingCharges.value.find((item: any) => item.id === selectedShippingChargeId.value) || null
+);
 
 const effectiveCheckoutPhone = computed(() => {
   const profilePhone = authStore.user?.phone?.trim() || '';
@@ -546,6 +606,12 @@ const orderWarnings = computed(() => {
   if (authStore.isAuthenticated && addresses.value.length === 0) {
     warnings.push('Add your delivery address before placing the order.');
   }
+  if (!selectedShippingChargeId.value) {
+    warnings.push('Select a delivery area before placing the order.');
+  }
+  if (!acceptedTerms.value) {
+    warnings.push('Accept the legal terms before placing the order.');
+  }
   const selectedAddress = addresses.value.find((address) => address.id === selectedAddressId.value) || null;
   if (authStore.isAuthenticated && selectedAddressId.value && !isValidBangladeshPhone(selectedAddress?.phone || '')) {
     warnings.push('The selected delivery address needs a valid Bangladesh mobile number.');
@@ -565,6 +631,8 @@ const checkoutPrimaryLabel = computed(() => {
   if (!effectiveCheckoutPhone.value) return 'Add phone to continue';
   if (addresses.value.length === 0) return 'Add address to continue';
   if (!selectedAddressId.value) return 'Select address to continue';
+  if (!selectedShippingChargeId.value) return 'Select delivery area';
+  if (!acceptedTerms.value) return 'Accept terms to continue';
   return 'Place order';
 });
 
@@ -638,6 +706,24 @@ async function loadAddresses() {
     console.error('Failed to load addresses', error);
   } finally {
     loading.value = false;
+  }
+}
+
+async function loadShippingCharges() {
+  try {
+    const response = await axios.get('/api/public/shipping-charges');
+    shippingCharges.value = Array.isArray(response.data) ? response.data : [];
+    if (!selectedShippingChargeId.value) {
+      const defaultCharge = shippingCharges.value.find((item: any) => item.delivery_area === 'outside_dhaka') || shippingCharges.value[0];
+      selectedShippingChargeId.value = defaultCharge?.id || '';
+    } else if (!shippingCharges.value.some((item: any) => item.id === selectedShippingChargeId.value)) {
+      const defaultCharge = shippingCharges.value.find((item: any) => item.delivery_area === 'outside_dhaka') || shippingCharges.value[0];
+      selectedShippingChargeId.value = defaultCharge?.id || '';
+    }
+  } catch (error) {
+    console.error('Failed to load shipping charges', error);
+    shippingCharges.value = [];
+    selectedShippingChargeId.value = '';
   }
 }
 
@@ -899,7 +985,9 @@ async function submitCheckout() {
     await syncLocalCartToServer();
     const response = await axios.post('/api/user/orders/checkout', {
       shipping_address_id: selectedAddressId.value,
-      shipping_method: 'local',
+      shipping_method: selectedShippingCharge.value?.delivery_area || 'outside_dhaka',
+      shipping_charge_id: selectedShippingChargeId.value,
+      payment_method: 'cash_on_delivery',
       currency: 'BDT',
       coupon_code: appliedCoupon.value?.code || undefined,
       notes: notes.value || undefined,
@@ -907,7 +995,7 @@ async function submitCheckout() {
 
     toast.success('Order placed successfully');
     clearCart();
-    router.push({ path: '/user/orders', query: { upload: response.data?.id } });
+    router.push('/user/orders');
   } catch (error: any) {
     toast.error(error.response?.data?.error || 'Failed to place order');
   } finally {
@@ -949,6 +1037,7 @@ watch(
 );
 
 onMounted(() => {
+  void loadShippingCharges();
   if (authStore.isAuthenticated) {
     checkoutPhone.value = authStore.user?.phone || checkoutPhone.value;
     resetAddressForm();
@@ -956,4 +1045,8 @@ onMounted(() => {
     hydrateAuthenticatedCart();
   }
 });
+
+watch(selectedShippingCharge, (value) => {
+  shippingFee.value = Number(value?.cost || 0);
+}, { immediate: true });
 </script>

@@ -21,7 +21,7 @@
       <CardBody class="p-0">
         <div v-if="loading" class="px-4 py-10 text-center text-sm text-slate-500">Loading orders...</div>
         <div v-else-if="orders.length === 0">
-          <EmptyState title="No orders yet" description="Your paid and pending orders will appear here.">
+          <EmptyState title="No orders yet" description="Your MatrixShop orders will appear here after checkout.">
             <template #actions>
               <Button variant="primary" @click="$router.push('/shopping')">Start shopping</Button>
             </template>
@@ -73,16 +73,16 @@
                   <td class="border-b border-slate-100 px-3 py-2">
                     <div class="space-y-1">
                       <StatusChip :status="order.status" />
-                      <div class="text-slate-500">Shipping {{ order.shipping_method || 'air' }}</div>
+                      <div class="text-slate-500">Delivery area {{ order.shipping_method || 'outside_dhaka' }}</div>
                     </div>
                   </td>
                   <td class="border-b border-slate-100 px-3 py-2">
                     <div class="space-y-1">
-                      <Badge :variant="badgeVariant(order.payment_status)" class="text-[11px]">{{ paymentStatusLabel(order.payment_status) }}</Badge>
-                      <Badge v-if="latestProof(order)" :variant="proofBadgeVariant(latestProof(order).status)" class="text-[11px]">
+                      <Badge :variant="badgeVariant(order.payment_status)" class="text-[11px]">{{ paymentStatusLabel(order.payment_status, order.payment_method) }}</Badge>
+                      <Badge v-if="showPaymentProof(order) && latestProof(order)" :variant="proofBadgeVariant(latestProof(order).status)" class="text-[11px]">
                         {{ proofStatusLabel(latestProof(order).status) }}
                       </Badge>
-                      <div v-else class="text-slate-500">No slip uploaded</div>
+                      <div v-else class="text-slate-500">{{ showPaymentProof(order) ? 'No slip uploaded' : 'No advance payment required' }}</div>
                     </div>
                   </td>
                   <td class="border-b border-slate-100 px-3 py-2 text-right">
@@ -103,12 +103,15 @@
                       >
                         Cancel
                       </Button>
-                      <Button size="sm" variant="primary" class="h-10 px-3 text-[11px]" @click="openProofModal(order)">
+                      <Button v-if="showPaymentProof(order)" size="sm" variant="primary" class="h-10 px-3 text-[11px]" @click="openProofModal(order)">
                         {{ latestProof(order) ? 'Replace slip' : 'Upload payment slip' }}
                       </Button>
                     </div>
-                    <div v-if="latestProof(order)" class="mt-2 text-[11px] text-slate-500">
+                    <div v-if="showPaymentProof(order) && latestProof(order)" class="mt-2 text-[11px] text-slate-500">
                       Approval is tracked by seller/admin in {{ proofStatusLabel(latestProof(order).status).toLowerCase() }} state.
+                    </div>
+                    <div v-else-if="!showPaymentProof(order)" class="mt-2 text-[11px] text-slate-500">
+                      Cash on delivery order. Pay the courier at delivery time.
                     </div>
                   </td>
                 </tr>
@@ -201,7 +204,7 @@ const dayGroups = computed(() => {
 
 function badgeVariant(value: string) {
   if (['approved', 'shipped', 'received'].includes(value)) return 'success';
-  if (['submitted', 'pending_payment', 'pending_review'].includes(value)) return 'warning';
+  if (['submitted', 'pending_payment', 'pending_review', 'pending_purchase', 'cash_on_delivery'].includes(value)) return 'warning';
   if (['rejected', 'cancelled'].includes(value)) return 'danger';
   return 'default';
 }
@@ -213,7 +216,8 @@ function proofBadgeVariant(value: string) {
   return 'default';
 }
 
-function paymentStatusLabel(value: string | null | undefined) {
+function paymentStatusLabel(value: string | null | undefined, paymentMethod?: string | null) {
+  if (paymentMethod === 'cash_on_delivery' || value === 'cash_on_delivery') return 'Cash on delivery';
   return value || 'unsubmitted';
 }
 
@@ -233,6 +237,10 @@ function formatDateTime(value: string) {
 
 function latestProof(order: any) {
   return order?.paymentProofs?.[0] || null;
+}
+
+function showPaymentProof(order: any) {
+  return String(order?.payment_method || '').toLowerCase() !== 'cash_on_delivery';
 }
 
 function canCancelOrder(order: any) {

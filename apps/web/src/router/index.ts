@@ -86,9 +86,23 @@ const router = createRouter({
           component: () => import('@/pages/BlogPage.vue'),
         },
         {
-          path: 'terms',
+          path: 'terms-and-conditions',
           name: 'terms',
           component: () => import('@/pages/TermsPage.vue'),
+        },
+        {
+          path: 'privacy-policy',
+          name: 'privacy-policy',
+          component: () => import('@/pages/PrivacyPolicyPage.vue'),
+        },
+        {
+          path: 'returns-and-refunds',
+          name: 'returns-and-refunds',
+          component: () => import('@/pages/ReturnsPolicyPage.vue'),
+        },
+        {
+          path: 'terms',
+          redirect: '/terms-and-conditions',
         },
       ],
     },

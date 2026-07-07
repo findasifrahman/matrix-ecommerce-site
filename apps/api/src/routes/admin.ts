@@ -135,6 +135,12 @@ const couponSchema = z.object({
   is_active: z.boolean().default(true),
 });
 
+const shippingChargeSchema = z.object({
+  delivery_area: z.string().trim().min(2).max(120),
+  cost: z.number().min(0),
+  is_active: z.boolean().default(true),
+});
+
 function parseCouponDate(value: string | null | undefined) {
   if (!value) return null;
   const date = new Date(value);
@@ -738,6 +744,68 @@ export default async function adminRoutes(fastify: FastifyInstance) {
       page,
       limit,
     };
+  });
+
+  fastify.get('/shipping-charges', { preHandler: auth }, async () => {
+    return prisma.shippingCharge.findMany({
+      orderBy: [{ cost: 'asc' }, { delivery_area: 'asc' }],
+    });
+  });
+
+  fastify.post('/shipping-charges', { preHandler: auth }, async (request: FastifyRequest, reply: FastifyReply) => {
+    const body = shippingChargeSchema.parse(request.body);
+
+    try {
+      const charge = await prisma.shippingCharge.create({
+        data: {
+          delivery_area: body.delivery_area,
+          cost: Number(body.cost || 0),
+          is_active: body.is_active,
+        },
+      });
+      return reply.status(201).send(charge);
+    } catch (error: any) {
+      if (String(error?.message || '').includes('shipping_charges_delivery_area_key')) {
+        return reply.status(409).send({ error: 'A shipping charge already exists for this delivery area.' });
+      }
+      throw error;
+    }
+  });
+
+  fastify.patch('/shipping-charges/:id', { preHandler: auth }, async (request: FastifyRequest, reply: FastifyReply) => {
+    const { id } = request.params as { id: string };
+    const body = shippingChargeSchema.partial().parse(request.body);
+
+    const existing = await prisma.shippingCharge.findUnique({ where: { id } });
+    if (!existing) {
+      return reply.status(404).send({ error: 'Shipping charge not found' });
+    }
+
+    try {
+      return await prisma.shippingCharge.update({
+        where: { id },
+        data: {
+          delivery_area: body.delivery_area === undefined ? undefined : body.delivery_area,
+          cost: body.cost === undefined ? undefined : Number(body.cost),
+          is_active: body.is_active === undefined ? undefined : body.is_active,
+        },
+      });
+    } catch (error: any) {
+      if (String(error?.message || '').includes('shipping_charges_delivery_area_key')) {
+        return reply.status(409).send({ error: 'A shipping charge already exists for this delivery area.' });
+      }
+      throw error;
+    }
+  });
+
+  fastify.delete('/shipping-charges/:id', { preHandler: auth }, async (request: FastifyRequest, reply: FastifyReply) => {
+    const { id } = request.params as { id: string };
+    const existing = await prisma.shippingCharge.findUnique({ where: { id } });
+    if (!existing) {
+      return reply.status(404).send({ error: 'Shipping charge not found' });
+    }
+    await prisma.shippingCharge.delete({ where: { id } });
+    return { success: true };
   });
 
   fastify.post('/products', { preHandler: auth }, async (request: FastifyRequest, reply: FastifyReply) => {

@@ -127,6 +127,18 @@ export default async function publicShoppingRoutes(fastify: FastifyInstance) {
     return getCuratedHomeSections();
   });
 
+  fastify.get('/shipping-charges', async () => {
+    return prisma.shippingCharge.findMany({
+      where: { is_active: true },
+      orderBy: [{ cost: 'asc' }, { delivery_area: 'asc' }],
+      select: {
+        id: true,
+        delivery_area: true,
+        cost: true,
+      },
+    });
+  });
+
   fastify.get('/shopping/home-collections', async () => {
     return getHomepageCollections();
   });

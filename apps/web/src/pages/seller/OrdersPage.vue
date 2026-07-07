@@ -190,7 +190,9 @@
               <div class="rounded-xl border border-slate-200 bg-white p-4 text-sm">
                 <div class="text-[10px] font-semibold uppercase tracking-[0.22em] text-slate-500">Payment slips</div>
                 <div class="mt-2 flex flex-wrap gap-2">
-                  <Badge :variant="badgeVariant(selectedDetailItem.order?.payment_status || '')">{{ selectedDetailItem.order?.payment_status || 'unsubmitted' }}</Badge>
+                  <Badge :variant="badgeVariant(selectedDetailItem.order?.payment_status || '')">
+                    {{ selectedDetailItem.order?.payment_method === 'cash_on_delivery' ? 'Cash on delivery' : (selectedDetailItem.order?.payment_status || 'unsubmitted') }}
+                  </Badge>
                   <Badge v-if="latestProof(selectedDetailItem.order)" :variant="badgeVariant(latestProof(selectedDetailItem.order).status)">{{ latestProof(selectedDetailItem.order).status }}</Badge>
                 </div>
                 <div class="mt-2 space-y-1">

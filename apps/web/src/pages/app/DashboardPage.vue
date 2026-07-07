@@ -24,7 +24,7 @@
           <CreditCard class="h-4 w-4" />
         </div>
         <div class="mt-3 text-3xl font-semibold text-rose-600">{{ metrics.pendingPayment }}</div>
-        <p class="mt-1 text-sm text-slate-500">Orders waiting for payment slip or approval</p>
+        <p class="mt-1 text-sm text-slate-500">Orders waiting for COD delivery or internal approval</p>
       </div>
 
       <div class="rounded-2xl border border-slate-200 bg-white p-4">
@@ -158,12 +158,14 @@ function latestProof(order: any) {
 }
 
 function isUserActionRequired(order: any) {
+  if (String(order?.payment_method || '').toLowerCase() === 'cash_on_delivery') return false;
   const status = String(order?.payment_status || '').toLowerCase();
   if (status === 'approved' || status === 'paid') return false;
   return status === 'pending_payment' || !latestProof(order);
 }
 
 function paymentLabel(order: any) {
+  if (String(order?.payment_method || '').toLowerCase() === 'cash_on_delivery') return 'Cash on delivery';
   return isUserActionRequired(order) ? 'User action required' : (order?.payment_status || 'unsubmitted');
 }
 

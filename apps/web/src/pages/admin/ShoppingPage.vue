@@ -8,6 +8,7 @@
       <div class="flex gap-2">
         <Button variant="ghost" @click="activeTab = 'products'">Products</Button>
         <Button variant="ghost" @click="activeTab = 'taxonomy'">Taxonomy</Button>
+        <Button variant="ghost" @click="activeTab = 'shipping'">Delivery Charges</Button>
       </div>
     </div>
 
@@ -131,14 +132,14 @@
       </CardBody>
     </Card>
 
-    <Card v-else>
+    <Card v-else-if="activeTab === 'taxonomy'">
       <CardHeader>
         <div class="flex items-center justify-between gap-3">
           <div>
             <h3 class="text-lg font-semibold">Main categories, brands, models, and product types</h3>
             <p class="text-sm text-slate-500">This is the only catalog structure for uploads: main category -> brand -> model -> product type.</p>
           </div>
-          <Button variant="ghost" size="sm" @click="loadTaxonomy">Refresh</Button>
+          <Button variant="ghost" size="sm" @click="loadCatalogSettings">Refresh</Button>
         </div>
       </CardHeader>
       <CardBody class="space-y-6">
@@ -313,6 +314,74 @@
                     <Button variant="ghost" size="sm" class="text-red-600 hover:text-red-700" @click="deleteProductType(type)">Delete</Button>
                   </div>
                 </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </CardBody>
+    </Card>
+
+    <Card v-else>
+      <CardHeader>
+        <div class="flex items-center justify-between gap-3">
+          <div>
+            <h3 class="text-lg font-semibold">Delivery charges</h3>
+            <p class="text-sm text-slate-500">Manage checkout delivery areas and COD fees from one place.</p>
+          </div>
+          <Button variant="ghost" size="sm" @click="loadShippingCharges">Refresh</Button>
+        </div>
+      </CardHeader>
+      <CardBody class="space-y-6">
+        <div class="grid gap-4 xl:grid-cols-[360px_minmax(0,1fr)]">
+          <form class="space-y-3 rounded-2xl border border-slate-200 p-4" @submit.prevent="saveShippingCharge">
+            <h4 class="font-semibold text-slate-900">Add delivery charge</h4>
+            <div v-if="taxonomyFeedback.shippingCharge" class="rounded-2xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">
+              {{ taxonomyFeedback.shippingCharge }}
+            </div>
+            <Input v-model="shippingChargeForm.delivery_area" label="Delivery area" placeholder="inside Dhaka" />
+            <Input v-model.number="shippingChargeForm.cost" type="number" min="0" label="Cost (BDT)" />
+            <label class="flex items-center gap-2 text-sm text-slate-700">
+              <input v-model="shippingChargeForm.is_active" type="checkbox" class="h-4 w-4 rounded border-slate-300 text-teal-600" />
+              Active
+            </label>
+            <Button type="submit" variant="primary" size="sm" :loading="saving">Save delivery charge</Button>
+          </form>
+
+          <div class="rounded-2xl border border-slate-200 p-4">
+            <h4 class="font-semibold text-slate-900">Configured delivery areas</h4>
+            <div class="mt-3 space-y-3 text-sm">
+              <div v-for="charge in shippingCharges" :key="charge.id" class="rounded-xl bg-slate-50 px-4 py-4">
+                <div v-if="editingShippingChargeId === charge.id" class="space-y-3">
+                  <div v-if="taxonomyFeedback.shippingChargeEdit" class="rounded-2xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">
+                    {{ taxonomyFeedback.shippingChargeEdit }}
+                  </div>
+                  <div class="grid gap-3 md:grid-cols-2">
+                    <Input v-model="shippingChargeEditForm.delivery_area" label="Delivery area" />
+                    <Input v-model.number="shippingChargeEditForm.cost" type="number" min="0" label="Cost (BDT)" />
+                  </div>
+                  <label class="flex items-center gap-2 text-sm text-slate-700">
+                    <input v-model="shippingChargeEditForm.is_active" type="checkbox" class="h-4 w-4 rounded border-slate-300 text-teal-600" />
+                    Active
+                  </label>
+                  <div class="flex justify-end gap-2">
+                    <Button variant="ghost" size="sm" type="button" @click="cancelShippingChargeEdit">Cancel</Button>
+                    <Button variant="primary" size="sm" type="button" :loading="saving" @click="updateShippingCharge(charge)">Save changes</Button>
+                  </div>
+                </div>
+                <div v-else class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div class="min-w-0">
+                    <div class="font-semibold text-slate-900">{{ charge.delivery_area }}</div>
+                    <div class="mt-1 text-sm font-medium text-teal-700">{{ money(charge.cost, 'BDT') }}</div>
+                    <div class="mt-1 text-xs text-slate-500">{{ charge.is_active ? 'Active at checkout' : 'Hidden from checkout' }}</div>
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <Button variant="primary" size="sm" type="button" @click="startShippingChargeEdit(charge)">Edit charge</Button>
+                    <Button variant="ghost" size="sm" class="text-red-600 hover:text-red-700" @click="deleteShippingCharge(charge)">Delete</Button>
+                  </div>
+                </div>
+              </div>
+              <div v-if="shippingCharges.length === 0" class="rounded-xl border border-dashed border-slate-200 bg-white px-3 py-4 text-slate-500">
+                No delivery areas added yet.
               </div>
             </div>
           </div>
@@ -674,7 +743,7 @@ type DetailPointRow = {
 
 const toast = useToast();
 const router = useRouter();
-const activeTab = ref<'products' | 'taxonomy'>('products');
+const activeTab = ref<'products' | 'taxonomy' | 'shipping'>('products');
 const loadingProducts = ref(false);
 const saving = ref(false);
 const showProductModal = ref(false);
@@ -694,6 +763,7 @@ const taxonomy = reactive({
   brands: [] as any[],
   productTypes: [] as any[],
 });
+const shippingCharges = ref<any[]>([]);
 const mediaAssets = ref<any[]>([]);
 const knownMediaAssets = ref<Record<string, any>>({});
 const mediaLoading = ref(false);
@@ -705,6 +775,7 @@ const productMediaFiles = ref<File[]>([]);
 const productMediaUploading = ref(false);
 const showSkuImagePicker = ref(false);
 const activeSkuRowIndex = ref<number | null>(null);
+const editingShippingChargeId = ref('');
 const deleteConfirmOpen = ref(false);
 const deleteConfirmTitle = ref('Delete item');
 const deleteConfirmMessage = ref('');
@@ -715,9 +786,11 @@ const taxonomyFeedback = reactive({
   brand: '',
   brandModel: '',
   productType: '',
+  shippingCharge: '',
   brandEdit: '',
   brandModelEdit: '',
   productTypeEdit: '',
+  shippingChargeEdit: '',
 });
 
 const placeholderImage = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200"><rect width="100%25" height="100%25" fill="%23f1f5f9"/><path d="M70 125l25-28 20 22 18-20 27 26H70z" fill="%2394a3b8"/><circle cx="84" cy="84" r="12" fill="%2394a3b8"/></svg>';
@@ -731,9 +804,11 @@ function clearTaxonomyFeedback() {
   taxonomyFeedback.brand = '';
   taxonomyFeedback.brandModel = '';
   taxonomyFeedback.productType = '';
+  taxonomyFeedback.shippingCharge = '';
   taxonomyFeedback.brandEdit = '';
   taxonomyFeedback.brandModelEdit = '';
   taxonomyFeedback.productTypeEdit = '';
+  taxonomyFeedback.shippingChargeEdit = '';
 }
 
 const productRows = ref<any[]>([]);
@@ -803,12 +878,22 @@ const productTypeEditForm = reactive({
   slug: '',
   sort_order: 0,
 });
+const shippingChargeForm = reactive({
+  delivery_area: '',
+  cost: 0,
+  is_active: true,
+});
 const brandModelEditForm = reactive({
   id: '',
   brand_id: '',
   name: '',
   slug: '',
   sort_order: 0,
+});
+const shippingChargeEditForm = reactive({
+  delivery_area: '',
+  cost: 0,
+  is_active: true,
 });
 
 const currencyOptions = [{ value: 'BDT', label: 'BDT' }];
@@ -1174,6 +1259,11 @@ async function loadTaxonomy() {
   if (!brandModelForm.brand_id && taxonomy.brands[0]) brandModelForm.brand_id = taxonomy.brands[0].id;
 }
 
+async function loadShippingCharges() {
+  const response = await axios.get('/api/admin/shipping-charges');
+  shippingCharges.value = response.data || [];
+}
+
 async function loadMediaAssets() {
   mediaLoading.value = true;
   try {
@@ -1270,13 +1360,16 @@ async function loadProducts() {
 async function loadAll() {
   loadingProducts.value = true;
   try {
-    await loadTaxonomy();
-    await loadProducts();
+    await Promise.all([loadCatalogSettings(), loadProducts()]);
   } catch (error: any) {
     toast.error(error.response?.data?.error || 'Failed to load shopping management data');
   } finally {
     loadingProducts.value = false;
   }
+}
+
+async function loadCatalogSettings() {
+  await Promise.all([loadTaxonomy(), loadShippingCharges()]);
 }
 
 function setCoverAsset(assetId: string) {
@@ -1552,6 +1645,75 @@ async function saveProductType() {
   }
 }
 
+function startShippingChargeEdit(charge: any) {
+  clearTaxonomyFeedback();
+  editingShippingChargeId.value = charge.id;
+  Object.assign(shippingChargeEditForm, {
+    delivery_area: charge.delivery_area || '',
+    cost: Number(charge.cost || 0),
+    is_active: Boolean(charge.is_active),
+  });
+}
+
+function cancelShippingChargeEdit() {
+  editingShippingChargeId.value = '';
+  taxonomyFeedback.shippingChargeEdit = '';
+  Object.assign(shippingChargeEditForm, {
+    delivery_area: '',
+    cost: 0,
+    is_active: true,
+  });
+}
+
+async function saveShippingCharge() {
+  clearTaxonomyFeedback();
+  saving.value = true;
+  try {
+    await axios.post('/api/admin/shipping-charges', {
+      delivery_area: shippingChargeForm.delivery_area,
+      cost: Number(shippingChargeForm.cost || 0),
+      is_active: shippingChargeForm.is_active,
+    }, {
+      suppressGlobalErrorToast: true,
+    } as any);
+    toast.success('Delivery charge saved');
+    Object.assign(shippingChargeForm, { delivery_area: '', cost: 0, is_active: true });
+    await loadShippingCharges();
+  } catch (error: any) {
+    taxonomyFeedback.shippingCharge = extractRequestError(error, 'Failed to save delivery charge.');
+    toast.error(taxonomyFeedback.shippingCharge);
+  } finally {
+    saving.value = false;
+  }
+}
+
+async function updateShippingCharge(charge: any) {
+  taxonomyFeedback.shippingChargeEdit = '';
+  if (!shippingChargeEditForm.delivery_area.trim()) {
+    taxonomyFeedback.shippingChargeEdit = 'Delivery area is required.';
+    toast.error(taxonomyFeedback.shippingChargeEdit);
+    return;
+  }
+  saving.value = true;
+  try {
+    await axios.patch(`/api/admin/shipping-charges/${charge.id}`, {
+      delivery_area: shippingChargeEditForm.delivery_area,
+      cost: Number(shippingChargeEditForm.cost || 0),
+      is_active: shippingChargeEditForm.is_active,
+    }, {
+      suppressGlobalErrorToast: true,
+    } as any);
+    toast.success('Delivery charge updated');
+    cancelShippingChargeEdit();
+    await loadShippingCharges();
+  } catch (error: any) {
+    taxonomyFeedback.shippingChargeEdit = extractRequestError(error, 'Failed to update delivery charge.');
+    toast.error(taxonomyFeedback.shippingChargeEdit);
+  } finally {
+    saving.value = false;
+  }
+}
+
 function startBrandModelEdit(model: any, brand?: any) {
   clearTaxonomyFeedback();
   editingBrandModelId.value = brand?.id || model.brand_id || '';
@@ -1711,6 +1873,17 @@ function deleteProductType(type: any) {
     await axios.delete(`/api/admin/taxonomy/product-types/${type.id}`);
     toast.success('Product type deleted');
     await loadTaxonomy();
+  };
+  deleteConfirmOpen.value = true;
+}
+
+function deleteShippingCharge(charge: any) {
+  deleteConfirmTitle.value = 'Delete delivery charge';
+  deleteConfirmMessage.value = `Delete "${charge.delivery_area}"? Checkout will no longer be able to use this delivery area.`;
+  deleteAction.value = async () => {
+    await axios.delete(`/api/admin/shipping-charges/${charge.id}`);
+    toast.success('Delivery charge deleted');
+    await loadShippingCharges();
   };
   deleteConfirmOpen.value = true;
 }

@@ -216,6 +216,28 @@ async function syncLegacyCategoryMirror() {
   }
 }
 
+async function syncShippingChargeSeed() {
+  const rows = [
+    { delivery_area: 'inside Dhaka', cost: 80 },
+    { delivery_area: 'outside_dhaka', cost: 130 },
+  ];
+
+  for (const row of rows) {
+    await prisma.shippingCharge.upsert({
+      where: { delivery_area: row.delivery_area },
+      update: {
+        cost: row.cost,
+        is_active: true,
+      },
+      create: {
+        delivery_area: row.delivery_area,
+        cost: row.cost,
+        is_active: true,
+      },
+    });
+  }
+}
+
 async function main() {
   console.log('Seeding matrix-ecommerce ecommerce database...');
 
@@ -249,6 +271,8 @@ async function main() {
   console.log('Local taxonomy created');
   await syncLegacyCategoryMirror();
   console.log('Compatibility categories mirrored');
+  await syncShippingChargeSeed();
+  console.log('Shipping charges created');
 
   const legacyCategories = await prisma.productCategory.findMany({
     where: {

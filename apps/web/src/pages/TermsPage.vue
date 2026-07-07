@@ -2,16 +2,16 @@
   <div class="mx-auto min-h-[calc(100vh-3.5rem)] max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
     <div class="rounded-[28px] border border-slate-200 bg-white p-6 shadow-[0_18px_45px_rgba(15,23,42,0.06)] sm:p-8">
       <p class="text-[10px] font-bold uppercase tracking-[0.34em] text-teal-700">Legal</p>
-      <h1 class="mt-3 text-[34px] font-black tracking-tight text-slate-950 sm:text-[42px]">Terms of condition</h1>
+      <h1 class="mt-3 text-[34px] font-black tracking-tight text-slate-950 sm:text-[42px]">Terms & Conditions</h1>
       <div class="mt-6 space-y-4 text-[13px] leading-6 text-slate-600">
         <p>
-          Matrix Ecommerce is a shopping platform for admin-uploaded products. Orders, shipping estimates, and payment proofs are handled through the ecommerce checkout flow.
+          MatrixShop is a local ecommerce storefront for admin-uploaded products. Orders are reviewed through the existing seller and admin workflow after checkout.
         </p>
         <p>
-          Product pricing, shipping rates, and MOQ rules may be updated by the admin team and can change before checkout.
+          Product prices, delivery charges, stock status, and minimum order quantities may change before checkout if the admin team updates the catalog.
         </p>
         <p>
-          Customers should review product details, shipping settings, and order status before submitting payment slips.
+          Customers should review product details, delivery-area charges, and order status carefully before confirming a cash on delivery order.
         </p>
       </div>
     </div>

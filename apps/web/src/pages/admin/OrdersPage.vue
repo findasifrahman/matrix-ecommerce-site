@@ -122,11 +122,11 @@
                   </td>
                   <td class="border-b border-slate-100 px-2 py-2">
                     <div class="space-y-1">
-                      <Badge :variant="badgeVariant(order.payment_status)" class="text-[10px]">{{ order.payment_status }}</Badge>
+                      <Badge :variant="badgeVariant(order.payment_status)" class="text-[10px]">{{ order.payment_method === 'cash_on_delivery' ? 'Cash on delivery' : order.payment_status }}</Badge>
                       <Badge v-if="latestProof(order)" :variant="badgeVariant(latestProof(order).status)" class="text-[10px]">
                         {{ latestProof(order).status }}
                       </Badge>
-                      <div v-else class="text-slate-500">No slip uploaded</div>
+                      <div v-else class="text-slate-500">{{ order.payment_method === 'cash_on_delivery' ? 'No advance payment required' : 'No slip uploaded' }}</div>
                       <div class="text-slate-500">{{ order.paymentProofs?.length || 0 }} proof(s)</div>
                       <a
                         v-if="latestProof(order)?.asset?.public_url"
