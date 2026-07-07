@@ -5,9 +5,12 @@ import {
   getCuratedHomeSections,
   getHomepageCollections,
   getHomepageHotDeals,
+  getHotProductsFromSearchKeywords,
   getHotItems,
   getItemDetail,
   getVendorInfo,
+  getTrendingSearchKeywords,
+  logSearchKeyword,
   searchByKeyword,
   searchByVendorId,
 } from '../modules/shopping/shopping.service.js';
@@ -132,13 +135,24 @@ export default async function publicShoppingRoutes(fastify: FastifyInstance) {
     return getHomepageHotDeals();
   });
 
+  fastify.get('/shopping/hot-products', async (request: FastifyRequest, reply: FastifyReply) => {
+    try {
+      const query = getHotItemsSchema.parse(request.query);
+      return getHotProductsFromSearchKeywords(query.pageSize || 6);
+    } catch (error: any) {
+      fastify.log.error({ error, stack: error.stack }, '[Public Shopping Route] /shopping/hot-products error');
+      reply.status(400).send({ error: error.message || 'Invalid query parameters' });
+    }
+  });
+
   fastify.get('/shopping/search', async (request: FastifyRequest, reply: FastifyReply) => {
     try {
       reply.header('Cache-Control', 'public, max-age=300, stale-while-revalidate=1800');
       const query = searchByKeywordSchema.parse(request.query);
       if (!(await requireTurnstile(request, reply, query.turnstileToken))) return;
 
-      return searchByKeyword(query.keyword || query.category, {
+      const keyword = query.keyword || query.category;
+      const result = await searchByKeyword(keyword, {
         category: query.category,
         mainCategory: query.mainCategory,
         brandId: query.brandId,
@@ -148,6 +162,10 @@ export default async function publicShoppingRoutes(fastify: FastifyInstance) {
         page: query.page,
         pageSize: query.pageSize,
       });
+      if (keyword?.trim()) {
+        await logSearchKeyword(keyword, Number(result.totalCount || 0));
+      }
+      return result;
     } catch (error: any) {
       fastify.log.error({ error, stack: error.stack, query: request.query }, '[Public Shopping Route] /shopping/search error');
       reply.status(400).send({ error: error.message || 'Invalid query parameters' });
@@ -259,7 +277,14 @@ export default async function publicShoppingRoutes(fastify: FastifyInstance) {
     return item;
   });
 
-  fastify.get('/shopping/recent-searches', async () => []);
+  fastify.get('/shopping/recent-searches', async () => {
+    const terms = await getTrendingSearchKeywords(8);
+    return terms.map((term) => ({
+      keyword: term.keyword,
+      searchCount: term.search_count,
+      lastSearchedAt: term.last_searched_at,
+    }));
+  });
 
   fastify.get('/offers', async () => {
     if (!shoppingDbAvailable) {

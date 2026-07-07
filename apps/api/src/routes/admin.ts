@@ -2206,6 +2206,7 @@ export default async function adminRoutes(fastify: FastifyInstance) {
       page?: string;
       limit?: string;
       search?: string;
+      search_by?: string;
       category?: string;
       main_category_id?: string;
       brand_id?: string;
@@ -2216,6 +2217,7 @@ export default async function adminRoutes(fastify: FastifyInstance) {
     const page = Math.max(1, parseInt(query.page || '1', 10));
     const limit = Math.max(1, Math.min(100, parseInt(query.limit || '24', 10)));
     const search = query.search?.trim();
+    const searchBy = query.search_by?.trim() || 'all';
     const category = query.category?.trim();
     const mainCategoryId = query.main_category_id?.trim();
     const brandId = query.brand_id?.trim();
@@ -2244,11 +2246,41 @@ export default async function adminRoutes(fastify: FastifyInstance) {
       where.brand_model_id = null;
     }
     if (search) {
-      where.OR = [
-        { r2_key: { contains: search, mode: 'insensitive' } },
-        { public_url: { contains: search, mode: 'insensitive' } },
-        { category: { contains: search, mode: 'insensitive' } },
-      ];
+      const searchClauses = {
+        filename: [
+          { r2_key: { contains: search, mode: 'insensitive' } },
+          { public_url: { contains: search, mode: 'insensitive' } },
+        ],
+        main_category: [
+          { mainCategory: { name: { contains: search, mode: 'insensitive' } } },
+          { mainCategory: { slug: { contains: search, mode: 'insensitive' } } },
+        ],
+        brand: [
+          { taxonomyBrand: { name: { contains: search, mode: 'insensitive' } } },
+          { taxonomyBrand: { slug: { contains: search, mode: 'insensitive' } } },
+        ],
+        model: [
+          { brandModel: { name: { contains: search, mode: 'insensitive' } } },
+          { brandModel: { slug: { contains: search, mode: 'insensitive' } } },
+        ],
+        product_type: [
+          { productType: { name: { contains: search, mode: 'insensitive' } } },
+          { productType: { slug: { contains: search, mode: 'insensitive' } } },
+          { category: { contains: search, mode: 'insensitive' } },
+        ],
+      } as const;
+
+      where.OR = searchBy !== 'all' && searchBy in searchClauses
+        ? [...searchClauses[searchBy as keyof typeof searchClauses]]
+        : [
+            { r2_key: { contains: search, mode: 'insensitive' } },
+            { public_url: { contains: search, mode: 'insensitive' } },
+            { category: { contains: search, mode: 'insensitive' } },
+            { mainCategory: { name: { contains: search, mode: 'insensitive' } } },
+            { taxonomyBrand: { name: { contains: search, mode: 'insensitive' } } },
+            { brandModel: { name: { contains: search, mode: 'insensitive' } } },
+            { productType: { name: { contains: search, mode: 'insensitive' } } },
+          ];
     }
 
     const [total, media] = await Promise.all([

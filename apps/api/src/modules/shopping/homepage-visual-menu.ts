@@ -70,9 +70,17 @@ export const HOMEPAGE_VISUAL_MENU_SECTIONS: HomepageVisualMenuSectionSeed[] = [
     ],
   },
   {
+    section_key: 'power-bank',
+    section_label: 'Power bank',
+    section_sort_order: 4,
+    items: [
+      { title: 'Power Bank', search_keyword: 'power bank', image_url: POWER_BANK_IMAGE, image_alt: 'Power bank', sort_order: 1 },
+    ],
+  },
+  {
     section_key: 'earbud',
     section_label: 'Earbud',
-    section_sort_order: 4,
+    section_sort_order: 5,
     items: [
       { title: 'Earbud', search_keyword: 'earbud', image_url: EARBUD_IMAGE, image_alt: 'Earbud', sort_order: 1 },
     ],

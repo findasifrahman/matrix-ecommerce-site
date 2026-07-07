@@ -107,6 +107,7 @@ import { Button, useToast } from '@matrix-ecommerce/ui';
 import { Search } from 'lucide-vue-next';
 import ProductCard from '@/components/shopping/ProductCard.vue';
 import { useShoppingCart } from '@/composables/useShoppingCart';
+import { recordCategoryIntent, recordProductIntent, recordSearchIntent } from '@/utils/shopping-personalization';
 
 const route = useRoute();
 const router = useRouter();
@@ -175,6 +176,11 @@ async function runSearch() {
     products.value = Array.isArray(response.data?.items) ? response.data.items : [];
     totalCount.value = Number(response.data?.totalCount || products.value.length || 0);
     totalPages.value = Number(response.data?.totalPages || Math.max(1, Math.ceil((totalCount.value || products.value.length || 0) / pageSize.value)));
+    if (searchQuery.value.trim()) {
+      recordSearchIntent(searchQuery.value.trim(), products.value);
+    } else if (selectedCategory.value) {
+      recordCategoryIntent(selectedCategory.value, selectedCategory.value, products.value);
+    }
   } catch {
     products.value = [];
     totalCount.value = 0;
@@ -186,6 +192,7 @@ async function runSearch() {
 }
 
 function openProduct(product: any) {
+  recordProductIntent(product);
   router.push({ name: 'product-detail', params: { externalId: product.externalId } });
 }
 

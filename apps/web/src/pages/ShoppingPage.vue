@@ -122,7 +122,7 @@
         <div class="flex items-center justify-between gap-3">
           <div>
             <p class="text-[10px] font-bold uppercase tracking-[0.3em] text-slate-400">Hot items</p>
-            <h2 class="mt-1 text-xl font-black tracking-tight text-slate-950">Two spotlight products from the admin panel</h2>
+            <h2 class="mt-1 text-xl font-black tracking-tight text-slate-950">Spotlight products</h2>
           </div>
           <Button variant="ghost" size="sm" @click="openBrowse">Browse more</Button>
         </div>
@@ -154,6 +154,32 @@
           <ProductCard
             v-for="product in recommendedItems.slice(0, 8)"
             :key="product.externalId"
+            :product="product"
+            @click="openProduct"
+            @request-buy="addProduct"
+          />
+        </div>
+      </section>
+
+      <section
+        v-if="hotProducts.length > 0"
+        class="mt-6 w-full border-y border-slate-200 bg-white p-5 shadow-[0_16px_38px_rgba(15,23,42,0.05)]"
+      >
+        <div class="flex items-center justify-between gap-3">
+          <div>
+            <p class="text-[10px] font-bold uppercase tracking-[0.3em] text-slate-400">Hot products</p>
+            <h2 class="mt-1 text-xl font-black tracking-tight text-slate-950">Popular from real searches</h2>
+            <p v-if="hotProductKeywords.length > 0" class="mt-1 text-xs text-slate-500">
+              Based on recent searches: {{ hotProductKeywords.slice(0, 4).join(', ') }}
+            </p>
+          </div>
+          <Button variant="ghost" size="sm" @click="openBrowse">Browse more</Button>
+        </div>
+
+        <div class="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-6">
+          <ProductCard
+            v-for="product in hotProducts.slice(0, 6)"
+            :key="`hot-${product.externalId}`"
             :product="product"
             @click="openProduct"
             @request-buy="addProduct"
@@ -209,6 +235,7 @@ import { Button, useToast } from '@matrix-ecommerce/ui';
 import { Search } from 'lucide-vue-next';
 import ProductCard from '@/components/shopping/ProductCard.vue';
 import { useShoppingCart } from '@/composables/useShoppingCart';
+import { getYouMayLikeProducts, recordMenuIntent, recordProductIntent } from '@/utils/shopping-personalization';
 
 const router = useRouter();
 const toast = useToast();
@@ -221,6 +248,8 @@ const heroBanners = ref<any[]>([]);
 const visualMenuSections = ref<any[]>([]);
 const hotDeals = ref<any[]>([]);
 const recommendedItems = ref<any[]>([]);
+const hotProducts = ref<any[]>([]);
+const hotProductKeywords = ref<string[]>([]);
 const homepageCollections = ref<Array<{ key: string; label: string; title: string; imageUrl?: string; imageAlt?: string; searchKeyword?: string; items: any[]; sortOrder: number }>>([]);
 const activeHeroIndex = ref(0);
 let heroTimer: number | null = null;
@@ -340,12 +369,18 @@ async function loadHotDeals() {
   }
 }
 
-async function loadRecommended() {
+function loadRecommended() {
+  recommendedItems.value = getYouMayLikeProducts(8);
+}
+
+async function loadHotProducts() {
   try {
-    const response = await axios.get('/api/public/shopping/hot', { params: { page: 1, pageSize: 8 } });
-    recommendedItems.value = Array.isArray(response.data) ? response.data : [];
+    const response = await axios.get('/api/public/shopping/hot-products', { params: { pageSize: 6 } });
+    hotProducts.value = Array.isArray(response.data?.items) ? response.data.items : [];
+    hotProductKeywords.value = Array.isArray(response.data?.keywords) ? response.data.keywords : [];
   } catch {
-    recommendedItems.value = [];
+    hotProducts.value = [];
+    hotProductKeywords.value = [];
   }
 }
 
@@ -380,6 +415,9 @@ function openBrowse() {
 
 function openKeyword(keyword: string) {
   const value = String(keyword || '').trim();
+  if (value) {
+    recordMenuIntent(value, value);
+  }
   router.push({
     name: 'shopping-browse',
     query: value ? { q: value } : undefined,
@@ -387,6 +425,7 @@ function openKeyword(keyword: string) {
 }
 
 function openProduct(product: any) {
+  recordProductIntent(product);
   router.push({ name: 'product-detail', params: { externalId: product.externalId } });
 }
 
@@ -396,11 +435,12 @@ function addProduct(product: any) {
 }
 
 async function loadHomepage() {
+  loadRecommended();
   await Promise.all([
     loadHeroBanners(),
     loadVisualMenu(),
     loadHotDeals(),
-    loadRecommended(),
+    loadHotProducts(),
     loadHomepageCollections(),
   ]);
   startHeroRotation();

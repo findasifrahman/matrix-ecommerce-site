@@ -534,6 +534,22 @@ model ProductSearchVector {
   @@map("product_search_vectors")
 }
 
+model SearchKeywordStat {
+  id               String   @id @default(uuid())
+  keyword          String
+  normalized_key   String   @unique
+  search_count     Int      @default(1)
+  result_count_sum Int      @default(0)
+  last_result_count Int     @default(0)
+  last_searched_at DateTime @default(now())
+  created_at       DateTime @default(now())
+  updated_at       DateTime @updatedAt
+
+  @@index([search_count, last_searched_at])
+  @@index([last_searched_at])
+  @@map("search_keyword_stats")
+}
+
 model Cart {
   id         String     @id @default(uuid())
   user_id    String     @unique

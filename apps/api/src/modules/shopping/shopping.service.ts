@@ -9,6 +9,8 @@ type ProductCard = {
   priceMin?: number;
   priceMax?: number;
   originalPrice?: number;
+  rating?: number;
+  ratingCount?: number;
   currency: 'BDT';
   imageUrl?: string;
   images?: string[];
@@ -28,6 +30,9 @@ type ProductDetail = ProductCard & {
   description?: string;
   skus?: any[];
   detailPoints?: Array<{ text: string; depth: number }>;
+  videoUrl?: string;
+  videoThumbnailUrl?: string;
+  videoMimeType?: string;
   rating?: number;
   ratingCount?: number;
   availableQuantity?: number;
@@ -110,6 +115,12 @@ function normalizeLocalCard(product: any, mediaById: Map<string, any> = new Map(
     originalPrice: product.original_price !== null && product.original_price !== undefined
       ? Number(product.original_price)
       : undefined,
+    rating: product.rating !== null && product.rating !== undefined
+      ? Number(product.rating)
+      : undefined,
+    ratingCount: product.review_count !== null && product.review_count !== undefined
+      ? Number(product.review_count)
+      : 0,
     currency: 'BDT',
     imageUrl,
     images: images.length > 0 ? images : undefined,
@@ -129,6 +140,7 @@ function normalizeLocalCard(product: any, mediaById: Map<string, any> = new Map(
 function normalizeLocalDetail(product: any, mediaById: Map<string, any> = new Map()): ProductDetail {
   const card = normalizeLocalCard(product, mediaById);
   const gallery = Array.isArray(card.images) ? card.images.filter(Boolean) : [];
+  const videoAsset = product.video_asset_id ? mediaById.get(String(product.video_asset_id)) : null;
   const skus = (Array.isArray(product.specifications) ? product.specifications : []).map((row: any) => {
     const asset = row?.image_asset_id ? mediaById.get(String(row.image_asset_id)) : null;
     return {
@@ -144,6 +156,9 @@ function normalizeLocalDetail(product: any, mediaById: Map<string, any> = new Ma
     description: product.description || '',
     skus,
     detailPoints: Array.isArray(product.dimensions?.detailPoints) ? product.dimensions.detailPoints : [],
+    videoUrl: videoAsset?.public_url || videoAsset?.thumbnail_url || undefined,
+    videoThumbnailUrl: videoAsset?.thumbnail_url || product.coverAsset?.thumbnail_url || product.coverAsset?.public_url || undefined,
+    videoMimeType: videoAsset?.mime_type || undefined,
     raw: product,
     rating: product.rating ?? undefined,
     ratingCount: product.review_count ?? 0,
@@ -449,6 +464,7 @@ export async function getItemDetail(externalId: string) {
   const assetIds = Array.from(new Set([
     ...(Array.isArray(product.gallery_asset_ids) ? product.gallery_asset_ids : []),
     product.cover_asset_id,
+    product.video_asset_id,
     ...((Array.isArray(product.specifications) ? product.specifications : [])
       .map((row: any) => row?.image_asset_id)
       .filter((id: any): id is string => typeof id === 'string' && id.length > 0)),
@@ -457,7 +473,7 @@ export async function getItemDetail(externalId: string) {
   const assets = assetIds.length > 0
     ? await prisma.mediaAsset.findMany({
         where: { id: { in: assetIds } },
-        select: { id: true, public_url: true, thumbnail_url: true },
+        select: { id: true, public_url: true, thumbnail_url: true, mime_type: true },
       })
     : [];
 
@@ -588,7 +604,8 @@ const HOMEPAGE_COLLECTIONS: HomepageCollectionConfig[] = [
   { key: 'you-may-like', label: 'You may like', limit: 8, fallbackKeyword: 'phone accessories', sortOrder: 1 },
   { key: 'phone-cover', label: 'Phone cover', limit: 4, fallbackKeyword: 'phone cover', sortOrder: 2, productTypeSlug: 'phone-cover' },
   { key: 'charger', label: 'Charger', limit: 4, fallbackKeyword: 'charger', sortOrder: 3, productTypeSlug: 'charger' },
-  { key: 'earbud', label: 'Earbud', limit: 4, fallbackKeyword: 'earbud', sortOrder: 4, productTypeSlug: 'earbud' },
+  { key: 'power-bank', label: 'Power bank', limit: 4, fallbackKeyword: 'power bank', sortOrder: 4, productTypeSlug: 'power-bank' },
+  { key: 'earbud', label: 'Earbud', limit: 4, fallbackKeyword: 'earbud', sortOrder: 5, productTypeSlug: 'earbud' },
 ];
 
 export async function getHomepageCollections(): Promise<Array<{
@@ -679,4 +696,71 @@ export async function getHomepageHotDeals(): Promise<ProductCard[]> {
   });
 
   return loadLocalCards(deals.map((deal) => deal.product));
+}
+
+function normalizeKeyword(value: string) {
+  return String(value || '')
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, ' ')
+    .slice(0, 200);
+}
+
+export async function logSearchKeyword(keyword: string, resultCount: number) {
+  const normalized = normalizeKeyword(keyword);
+  if (!normalized) return;
+
+  await prisma.searchKeywordStat.upsert({
+    where: { normalized_key: normalized },
+    update: {
+      keyword: keyword.trim().slice(0, 200),
+      search_count: { increment: 1 },
+      result_count_sum: { increment: Math.max(0, Number(resultCount || 0)) },
+      last_result_count: Math.max(0, Number(resultCount || 0)),
+      last_searched_at: new Date(),
+    },
+    create: {
+      keyword: keyword.trim().slice(0, 200),
+      normalized_key: normalized,
+      search_count: 1,
+      result_count_sum: Math.max(0, Number(resultCount || 0)),
+      last_result_count: Math.max(0, Number(resultCount || 0)),
+      last_searched_at: new Date(),
+    },
+  });
+}
+
+export async function getTrendingSearchKeywords(limit = 10) {
+  return prisma.searchKeywordStat.findMany({
+    orderBy: [
+      { search_count: 'desc' },
+      { last_searched_at: 'desc' },
+    ],
+    take: Math.max(1, Math.min(50, limit)),
+  });
+}
+
+export async function getHotProductsFromSearchKeywords(limit = 6): Promise<{ keywords: string[]; items: ProductCard[] }> {
+  const terms = await getTrendingSearchKeywords(8);
+  const keywords = terms.map((term) => term.keyword).filter(Boolean);
+  const items: ProductCard[] = [];
+  const seen = new Set<string>();
+
+  for (const term of keywords) {
+    const result = await searchByKeyword(term, {
+      page: 1,
+      pageSize: limit,
+    });
+    for (const item of result.items) {
+      const key = String(item.externalId || item.id || '').trim();
+      if (!key || seen.has(key)) continue;
+      seen.add(key);
+      items.push(item);
+      if (items.length >= limit) {
+        return { keywords, items };
+      }
+    }
+  }
+
+  return { keywords, items };
 }

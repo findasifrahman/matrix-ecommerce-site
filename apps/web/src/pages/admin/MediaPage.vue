@@ -4,7 +4,7 @@
       <template #actions>
         <Button variant="primary" @click="showUploadModal = true">
           <Upload class="w-4 h-4 mr-2" />
-          Upload Image
+          Upload Media
         </Button>
         <Button 
           v-if="selectedMedia.length > 0"
@@ -42,6 +42,20 @@
                 <Search class="w-4 h-4 text-slate-400" />
               </template>
             </Input>
+          </div>
+          <div class="w-48">
+            <select
+              v-model="searchBy"
+              @change="handleSearchByChange"
+              class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2 focus:border-teal-500 transition-colors bg-white"
+            >
+              <option value="all">Search everything</option>
+              <option value="filename">Filename / URL</option>
+              <option value="main_category">Main category</option>
+              <option value="brand">Brand</option>
+              <option value="model">Model</option>
+              <option value="product_type">Product type</option>
+            </select>
           </div>
           <div class="w-48">
             <select
@@ -109,7 +123,7 @@
       <CardBody>
         <div v-if="media.length === 0 && !loading" class="text-center py-12">
           <p class="text-slate-600 mb-4">No media found</p>
-          <Button variant="primary" @click="showUploadModal = true">Upload Image</Button>
+          <Button variant="primary" @click="showUploadModal = true">Upload Media</Button>
         </div>
         <div v-else class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
           <div
@@ -120,7 +134,16 @@
             @click="toggleSelect(item.id)"
           >
             <!-- Thumbnail or full image -->
+            <video
+              v-if="isVideoItem(item)"
+              :src="item.public_url"
+              class="w-full h-32 object-cover"
+              muted
+              playsinline
+              preload="metadata"
+            />
             <img
+              v-else
               :src="item.thumbnail_url || item.public_url"
               :alt="item.r2_key"
               class="w-full h-32 object-cover"
@@ -182,16 +205,16 @@
     </Card>
 
     <!-- Upload Modal -->
-    <Modal v-model="showUploadModal" title="Upload Image" size="lg">
+    <Modal v-model="showUploadModal" title="Upload Media" size="lg">
       <div class="space-y-4">
         <div>
           <label class="block text-sm font-medium text-slate-700 mb-2">
-            Select Image (Max 3.5MB)
+            Select image or video
           </label>
           <input
             ref="fileInput"
             type="file"
-            accept="image/*"
+            accept="image/*,video/mp4,video/webm,video/quicktime,video/*"
             class="block w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 file:mr-4 file:rounded-md file:border-0 file:bg-teal-600 file:px-4 file:py-2 file:text-white hover:file:bg-teal-700"
             @change="handleFileSelect"
           />
@@ -199,10 +222,20 @@
           <p v-if="selectedFile" class="text-sm text-slate-600 mt-1">
             File: {{ selectedFile.name }} ({{ formatSize(selectedFile.size) }})
           </p>
+          <p class="text-xs text-slate-500 mt-1">Images: max 3.5MB. Videos: max 5MB.</p>
         </div>
         
         <div v-if="previewUrl" class="border border-slate-200 rounded-lg p-2">
+          <video
+            v-if="selectedFile && selectedFile.type.startsWith('video/')"
+            :src="previewUrl"
+            class="w-full h-48 rounded object-contain bg-slate-950"
+            controls
+            muted
+            playsinline
+          />
           <img
+            v-else
             :src="previewUrl"
             alt="Preview"
             class="w-full h-48 object-contain rounded"
@@ -239,7 +272,7 @@
           </div>
         </div>
         <p class="text-xs text-slate-500">
-          Media uploads must be assigned to the same taxonomy path used by products. Use <strong>General</strong> when the image is not brand/model-specific.
+          Media uploads must be assigned to the same taxonomy path used by products. Use <strong>General</strong> when the file is not brand/model-specific.
         </p>
 
         <div>
@@ -269,9 +302,18 @@
 
     <!-- View/Edit Media Modal -->
     <Modal v-model="showEditModal" :title="editingMedia ? 'Edit Media Metadata' : 'View Media'" size="lg">
-      <div v-if="editingMedia" class="space-y-4">
+        <div v-if="editingMedia" class="space-y-4">
         <div class="border border-slate-200 rounded-lg p-4 bg-slate-50">
+          <video
+            v-if="isVideoItem(editingMedia)"
+            :src="editingMedia.public_url"
+            class="w-full h-64 object-contain rounded bg-slate-950"
+            controls
+            muted
+            playsinline
+          />
           <img
+            v-else
             :src="editingMedia.thumbnail_url || editingMedia.public_url"
             :alt="editingMedia.r2_key"
             class="w-full h-64 object-contain rounded"
@@ -415,10 +457,13 @@ import {
 } from '@matrix-ecommerce/ui';
 import { Upload, Trash2, Search, X, Copy, Eye, Edit } from 'lucide-vue-next';
 
-const MAX_FILE_SIZE = 3.5 * 1024 * 1024; // 3.5MB
+const MAX_IMAGE_FILE_SIZE = 3.5 * 1024 * 1024;
+const MAX_VIDEO_FILE_SIZE = 5 * 1024 * 1024;
+const SEARCH_DEBOUNCE_MS = 300;
 
 const media = ref<any[]>([]);
 const searchQuery = ref('');
+const searchBy = ref('all');
 const selectedMainCategoryId = ref('');
 const selectedBrandId = ref('');
 const selectedBrandModelId = ref('');
@@ -429,6 +474,7 @@ const total = ref(0);
 const showUploadModal = ref(false);
 const selectedFile = ref<File | null>(null);
 const previewUrl = ref<string>('');
+const fileInput = ref<HTMLInputElement | null>(null);
 const uploading = ref(false);
 const loading = ref(false);
 const loadingTaxonomy = ref(false);
@@ -445,6 +491,7 @@ const productTypes = ref<any[]>([]);
 const showEditModal = ref(false);
 const editingMedia = ref<any>(null);
 const savingMetadata = ref(false);
+let searchTimer: ReturnType<typeof setTimeout> | null = null;
 const uploadForm = reactive({
   main_category_id: '',
   brand_id: '__NONE__',
@@ -509,6 +556,10 @@ function formatSize(bytes: number): string {
   return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
 }
 
+function isVideoItem(item: any) {
+  return String(item?.mime_type || '').startsWith('video/');
+}
+
 function getMediaDisplayName(item: any): string {
   // 1. Try title (extracted from tags by API)
   if (item.title) {
@@ -540,6 +591,7 @@ async function loadMedia() {
   try {
     const params: any = { page: currentPage.value, limit: 24 };
     if (searchQuery.value) params.search = searchQuery.value;
+    if (searchBy.value && searchBy.value !== 'all') params.search_by = searchBy.value;
     if (selectedMainCategoryId.value) params.main_category_id = selectedMainCategoryId.value;
     if (selectedBrandId.value) params.brand_id = selectedBrandId.value;
     if (selectedBrandModelId.value) params.brand_model_id = selectedBrandModelId.value;
@@ -576,7 +628,15 @@ async function loadMedia() {
 
 function handleSearch() {
   currentPage.value = 1;
-  loadMedia();
+  if (searchTimer) clearTimeout(searchTimer);
+  searchTimer = setTimeout(() => {
+    void loadMedia();
+  }, SEARCH_DEBOUNCE_MS);
+}
+
+function handleSearchByChange() {
+  currentPage.value = 1;
+  void loadMedia();
 }
 
 function handleCategoryChange() {
@@ -586,17 +646,18 @@ function handleCategoryChange() {
 
 function clearFilters() {
   searchQuery.value = '';
+  searchBy.value = 'all';
   selectedMainCategoryId.value = '';
   selectedBrandId.value = '';
   selectedBrandModelId.value = '';
   selectedProductTypeId.value = '';
   currentPage.value = 1;
-  loadMedia();
+  void loadMedia();
 }
 
 function handlePageChange(page: number) {
   currentPage.value = page;
-  loadMedia();
+  void loadMedia();
 }
 
 function handleFileSelect(event: Event) {
@@ -605,17 +666,19 @@ function handleFileSelect(event: Event) {
   fileError.value = '';
   
   if (file) {
-    // Validate file size
-    if (file.size > MAX_FILE_SIZE) {
-      fileError.value = `File size (${formatSize(file.size)}) exceeds maximum of ${formatSize(MAX_FILE_SIZE)}`;
+    const isVideo = file.type.startsWith('video/');
+    const isImage = file.type.startsWith('image/');
+
+    if (!isImage && !isVideo) {
+      fileError.value = 'File must be an image or video';
       selectedFile.value = null;
       previewUrl.value = '';
       return;
     }
-    
-    // Validate it's an image
-    if (!file.type.startsWith('image/')) {
-      fileError.value = 'File must be an image';
+
+    const maxAllowedSize = isVideo ? MAX_VIDEO_FILE_SIZE : MAX_IMAGE_FILE_SIZE;
+    if (file.size > maxAllowedSize) {
+      fileError.value = `${isVideo ? 'Video' : 'Image'} size (${formatSize(file.size)}) exceeds maximum of ${formatSize(maxAllowedSize)}`;
       selectedFile.value = null;
       previewUrl.value = '';
       return;
@@ -679,13 +742,13 @@ async function handleUpload() {
     });
 
     console.log('[MediaPage] Upload successful:', response.data);
-    toast.success('Image uploaded successfully! Thumbnail generated automatically.');
+    toast.success(isVideoItem(response.data) ? 'Video uploaded successfully.' : 'Image uploaded successfully! Thumbnail generated automatically.');
     resetUploadForm();
     await loadMedia();
   } catch (error: any) {
     console.error('[MediaPage] Upload error:', error);
     console.error('[MediaPage] Error response:', error.response?.data);
-    const errorMsg = error.response?.data?.error || error.message || 'Failed to upload image';
+    const errorMsg = error.response?.data?.error || error.message || 'Failed to upload media';
     toast.error(errorMsg);
     
     // Show more details in development
@@ -707,8 +770,7 @@ function resetUploadForm() {
   uploadForm.brand_model_id = '__NONE__';
   uploadForm.product_type_id = '';
   uploadTags.value = '';
-  const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
-  if (fileInput) fileInput.value = '';
+  if (fileInput.value) fileInput.value.value = '';
 }
 
 function toggleSelect(id: string) {

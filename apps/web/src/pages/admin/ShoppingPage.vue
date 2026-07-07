@@ -418,7 +418,7 @@
           <div class="flex flex-wrap items-center justify-between gap-3">
             <div>
               <h4 class="text-base font-semibold text-slate-900">Media library</h4>
-              <p class="text-xs text-slate-500">Media loads by the current main category, brand, model, and product type. Switch to General when you need shared images.</p>
+              <p class="text-xs text-slate-500">Media does not preload here. Use the current taxonomy path and click Load media only when you need to browse assets. Switch to General when you need shared images.</p>
             </div>
             <div class="flex flex-wrap gap-2">
               <Button variant="ghost" size="sm" type="button" @click="router.push('/admin/media')">Media page</Button>
@@ -481,6 +481,9 @@
 
           <div v-if="mediaLoading && mediaAssets.length === 0" class="rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-4 text-sm text-slate-500">
             Loading media...
+          </div>
+          <div v-else-if="!mediaLoadedOnce && mediaAssets.length === 0" class="rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-4 text-sm text-slate-500">
+            Media browsing is on-demand to save bandwidth. Click <span class="font-semibold text-slate-700">Load media</span> after choosing the taxonomy path or search term.
           </div>
           <div v-else-if="mediaAssets.length === 0" class="rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-4 text-sm text-slate-500">
             No media matched this category/search yet. Try another category, search by name, or upload new files.
@@ -1141,8 +1144,9 @@ async function openProductModal(product?: any) {
 
   mediaSearchQuery.value = '';
   mediaCategoryFilter.value = '__AUTO__';
+  mediaAssets.value = [];
+  mediaLoadedOnce.value = false;
   await hydrateSelectedMediaAssets();
-  await refreshMediaAssets();
   showProductModal.value = true;
 }
 
@@ -1322,9 +1326,6 @@ function removeDetailPointRow(index: number) {
 
 async function openSkuImagePicker(index: number) {
   activeSkuRowIndex.value = index;
-  if (!mediaLoadedOnce.value && !mediaLoading.value) {
-    await refreshMediaAssets();
-  }
   showSkuImagePicker.value = true;
 }
 
@@ -1765,9 +1766,6 @@ watch(() => productForm.main_category_id, () => {
   productForm.brand_model_id = '';
   if (productForm.product_type_id && !filteredProductTypeOptions.value.some((type) => type.value === productForm.product_type_id)) {
     productForm.product_type_id = '';
-  }
-  if (mediaCategoryFilter.value === '__AUTO__' && showProductModal.value) {
-    void refreshMediaAssets();
   }
 });
 

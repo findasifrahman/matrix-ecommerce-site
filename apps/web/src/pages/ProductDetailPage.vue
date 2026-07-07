@@ -36,7 +36,16 @@
                     :class="activeImage === image.src ? 'border-teal-500 ring-2 ring-teal-200' : 'border-slate-200 hover:border-teal-300'"
                     @click="activeImage = image.src"
                   >
-                    <img :src="image.thumb || image.src" :alt="product.title" class="h-full w-full object-cover" />
+                    <video
+                      v-if="image.type === 'video'"
+                      :src="image.src"
+                      :poster="image.thumb || image.poster"
+                      class="h-full w-full object-cover"
+                      muted
+                      playsinline
+                      preload="metadata"
+                    />
+                    <img v-else :src="image.thumb || image.src" :alt="product.title" class="h-full w-full object-cover" />
                   </button>
                 </div>
 
@@ -50,8 +59,20 @@
                     >
                       <ChevronLeft class="h-5 w-5" />
                     </button>
+                    <video
+                      v-if="activeMedia?.type === 'video'"
+                      :src="activeMedia.src"
+                      :poster="activeMedia.thumb || activeMedia.poster"
+                      class="h-full w-full bg-slate-950 object-cover"
+                      autoplay
+                      muted
+                      playsinline
+                      controls
+                      preload="metadata"
+                      @click="openLightbox()"
+                    />
                     <img
-                      v-if="activeImage"
+                      v-else-if="activeImage"
                       :src="activeImage"
                       :alt="product.title"
                       class="h-full w-full cursor-zoom-in object-cover"
@@ -72,7 +93,7 @@
                     >
                       <ZoomIn class="h-4 w-4" />
                     </button>
-                    <div v-if="!activeImage" class="flex h-full w-full items-center justify-center text-slate-400">
+                    <div v-if="!activeMedia" class="flex h-full w-full items-center justify-center text-slate-400">
                       <Package class="h-14 w-14" />
                     </div>
                   </div>
@@ -435,8 +456,18 @@
             <ChevronLeft class="h-7 w-7" />
           </button>
           <div class="relative flex max-h-[92vh] w-full max-w-[1400px] items-center justify-center">
+            <video
+              v-if="activeMedia?.type === 'video'"
+              :src="activeMedia.src"
+              :poster="activeMedia.thumb || activeMedia.poster"
+              class="max-h-[88vh] max-w-full rounded-[28px] object-contain"
+              controls
+              autoplay
+              muted
+              playsinline
+            />
             <img
-              v-if="activeImage"
+              v-else-if="activeImage"
               :src="activeImage"
               :alt="product.title"
               class="max-h-[88vh] max-w-full rounded-[28px] object-contain"
@@ -459,7 +490,16 @@
               :class="activeImage === image.src ? 'border-teal-400 ring-2 ring-teal-300' : 'border-white/20 opacity-80 hover:opacity-100'"
               @click.stop="activeImage = image.src"
             >
-              <img :src="image.thumb || image.src" :alt="product.title" class="h-full w-full object-cover" />
+              <video
+                v-if="image.type === 'video'"
+                :src="image.src"
+                :poster="image.thumb || image.poster"
+                class="h-full w-full object-cover"
+                muted
+                playsinline
+                preload="metadata"
+              />
+              <img v-else :src="image.thumb || image.src" :alt="product.title" class="h-full w-full object-cover" />
             </button>
           </div>
         </div>
@@ -517,7 +557,18 @@ const galleryItems = computed(() => {
     key: `gallery-${index}-${src}`,
     src,
     thumb: src,
+    type: 'image' as const,
   }));
+
+  const videoItems = product.value?.videoUrl
+    ? [{
+        key: `video-${product.value.videoUrl}`,
+        src: String(product.value.videoUrl),
+        thumb: String(product.value.videoThumbnailUrl || product.value.imageUrl || ''),
+        poster: String(product.value.videoThumbnailUrl || product.value.imageUrl || ''),
+        type: 'video' as const,
+      }]
+    : [];
 
   const skuItems = (Array.isArray(product.value?.skus) ? product.value.skus : [])
     .filter((row: any) => row?.imageUrl || row?.thumbnailUrl)
@@ -525,10 +576,13 @@ const galleryItems = computed(() => {
       key: `sku-${index}-${row.imageUrl || row.thumbnailUrl}`,
       src: row.imageUrl || row.thumbnailUrl,
       thumb: row.thumbnailUrl || row.imageUrl,
+      type: 'image' as const,
     }));
 
-  return Array.from(new Map([...baseItems, ...skuItems].map((item) => [item.src, item])).values());
+  return Array.from(new Map([...videoItems, ...baseItems, ...skuItems].map((item) => [item.src, item])).values());
 });
+
+const activeMedia = computed(() => galleryItems.value.find((item) => item.src === activeImage.value) || null);
 
 const activeImageIndex = computed(() => {
   const index = galleryItems.value.findIndex((item) => item.src === activeImage.value);
@@ -827,7 +881,7 @@ async function loadProduct() {
   try {
     const response = await axios.get(`/api/public/shopping/item/${externalId}`);
     product.value = response.data || null;
-    activeImage.value = response.data?.imageUrl || response.data?.images?.[0] || '';
+    activeImage.value = response.data?.videoUrl || response.data?.imageUrl || response.data?.images?.[0] || '';
     selectedSkuIndex.value = 0;
     activeDetailTab.value = 'overview';
     quantity.value = Math.max(1, Number(response.data?.minimumOrderQty || 1));
