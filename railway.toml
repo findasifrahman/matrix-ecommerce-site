@@ -1,6 +1,6 @@
 [build]
 builder = "NIXPACKS"
-buildCommand = "sh -lc 'SERVICE_NAME=$(printf \"%s\" \"${APP_KIND:-$RAILWAY_SERVICE_NAME}\" | tr \"[:upper:]\" \"[:lower:]\"); if [ -z \"$SERVICE_NAME\" ]; then echo \"Railway service name was not provided. Set APP_KIND=backend or APP_KIND=frontend in the service variables.\"; exit 1; fi; case \"$SERVICE_NAME\" in *back*|*api*) pnpm railway:build:api ;; *front*|*web*) pnpm railway:build:web ;; *) echo \"Unsupported Railway service name: $SERVICE_NAME\"; echo \"Rename the service to include backend/api or frontend/web, or set APP_KIND=backend or APP_KIND=frontend.\"; exit 1 ;; esac'"
+buildCommand = "sh -lc 'SERVICE_HINT=$(printf \"%s\" \"${APP_KIND:-$RAILWAY_SERVICE_NAME}\" | tr \"[:upper:]\" \"[:lower:]\"); if [ -n \"$APP_KIND\" ]; then TARGET_KIND=$(printf \"%s\" \"$APP_KIND\" | tr \"[:upper:]\" \"[:lower:]\"); elif [ -n \"$VITE_API_URL\" ]; then TARGET_KIND=frontend; elif [ -n \"$DATABASE_URL\" ] || [ -n \"$JWT_ACCESS_SECRET\" ]; then TARGET_KIND=backend; else case \"$SERVICE_HINT\" in *back*|*api*) TARGET_KIND=backend ;; *front*|*web*) TARGET_KIND=frontend ;; *) echo \"Unable to determine Railway service type.\"; echo \"Set APP_KIND=backend on the backend service or APP_KIND=frontend on the frontend service.\"; exit 1 ;; esac; fi; case \"$TARGET_KIND\" in backend) pnpm railway:build:api ;; frontend) pnpm railway:build:web ;; *) echo \"Unsupported APP_KIND: $TARGET_KIND\"; exit 1 ;; esac'"
 watchPatterns = [
   "/apps/api/**",
   "/apps/web/**",
@@ -12,6 +12,6 @@ watchPatterns = [
 ]
 
 [deploy]
-startCommand = "sh -lc 'SERVICE_NAME=$(printf \"%s\" \"${APP_KIND:-$RAILWAY_SERVICE_NAME}\" | tr \"[:upper:]\" \"[:lower:]\"); if [ -z \"$SERVICE_NAME\" ]; then echo \"Railway service name was not provided. Set APP_KIND=backend or APP_KIND=frontend in the service variables.\"; exit 1; fi; case \"$SERVICE_NAME\" in *back*|*api*) exec pnpm railway:start:api ;; *front*|*web*) exec pnpm railway:start:web ;; *) echo \"Unsupported Railway service name: $SERVICE_NAME\"; echo \"Rename the service to include backend/api or frontend/web, or set APP_KIND=backend or APP_KIND=frontend.\"; exit 1 ;; esac'"
+startCommand = "sh -lc 'SERVICE_HINT=$(printf \"%s\" \"${APP_KIND:-$RAILWAY_SERVICE_NAME}\" | tr \"[:upper:]\" \"[:lower:]\"); if [ -n \"$APP_KIND\" ]; then TARGET_KIND=$(printf \"%s\" \"$APP_KIND\" | tr \"[:upper:]\" \"[:lower:]\"); elif [ -n \"$VITE_API_URL\" ]; then TARGET_KIND=frontend; elif [ -n \"$DATABASE_URL\" ] || [ -n \"$JWT_ACCESS_SECRET\" ]; then TARGET_KIND=backend; else case \"$SERVICE_HINT\" in *back*|*api*) TARGET_KIND=backend ;; *front*|*web*) TARGET_KIND=frontend ;; *) echo \"Unable to determine Railway service type.\"; echo \"Set APP_KIND=backend on the backend service or APP_KIND=frontend on the frontend service.\"; exit 1 ;; esac; fi; case \"$TARGET_KIND\" in backend) exec pnpm railway:start:api ;; frontend) exec pnpm railway:start:web ;; *) echo \"Unsupported APP_KIND: $TARGET_KIND\"; exit 1 ;; esac'"
 restartPolicyType = "ON_FAILURE"
 restartPolicyMaxRetries = 10
