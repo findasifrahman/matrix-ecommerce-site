@@ -242,7 +242,7 @@ async function sendOrderConfirmationEmail(order: any) {
 
   await sendMail({
     to: email,
-    subject: `Matrix Ecommerce order ${order.order_number} received`,
+    subject: `Matrix Shop order ${order.order_number} received`,
     text: [
       `Your order ${order.order_number} has been received.`,
       '',

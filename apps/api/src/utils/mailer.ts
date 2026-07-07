@@ -95,7 +95,7 @@ export async function sendMail(payload: MailPayload) {
   const config = smtpConfig();
   const transporter = createTransport();
   return transporter.sendMail({
-    from: config.from || `"Matrix Ecommerce" <${config.user}>`,
+    from: config.from || `"Matrix Shop" <${config.user}>`,
     ...payload,
   });
 }

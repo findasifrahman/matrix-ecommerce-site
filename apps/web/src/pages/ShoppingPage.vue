@@ -21,7 +21,7 @@
 
           <div class="relative grid min-h-[520px] items-center gap-8 px-4 py-8 sm:px-8 lg:grid-cols-[minmax(0,640px)_1fr] lg:px-14 xl:px-20">
             <div class="space-y-5">
-              <p class="text-[10px] font-bold uppercase tracking-[0.4em] text-orange-600">Matrix Ecommerce</p>
+              <p class="text-[10px] font-bold uppercase tracking-[0.4em] text-orange-600">Matrix Shop</p>
               <Transition name="hero-content" mode="out-in">
                 <div :key="`hero-copy-${activeHeroIndex}`" class="space-y-3">
                   <h1 class="max-w-3xl text-4xl font-black tracking-tight text-slate-950 sm:text-6xl">

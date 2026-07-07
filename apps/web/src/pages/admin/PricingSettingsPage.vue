@@ -2,7 +2,7 @@
   <div class="space-y-6">
     <PageHeader
       title="Store Policy"
-      subtitle="Matrix Ecommerce uses one local currency and admin-uploaded product prices."
+      subtitle="Matrix Shop uses one local currency"
     />
 
     <Card>
@@ -11,8 +11,7 @@
       </CardHeader>
       <CardBody class="space-y-4 text-sm leading-6 text-slate-600">
         <p>
-          Product prices are entered directly on each product in BDT. Marketplace markup,
-          shipping-rate, and global MOQ settings are no longer used by this project.
+          Product prices are entered directly on each product in BDT
         </p>
         <div class="grid gap-3 md:grid-cols-3">
           <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">

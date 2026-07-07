@@ -4,7 +4,7 @@
       <section class="overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-[0_18px_45px_rgba(15,23,42,0.06)]">
         <div class="bg-[linear-gradient(135deg,#0f766e_0%,#11324d_100%)] px-6 py-8 text-white sm:px-8">
           <p class="text-[10px] font-bold uppercase tracking-[0.34em] text-white/65">Contact us</p>
-          <h1 class="mt-3 text-[34px] font-black tracking-tight sm:text-[42px]">Matrix Ecommerce office</h1>
+          <h1 class="mt-3 text-[34px] font-black tracking-tight sm:text-[42px]">Matrix Shop office</h1>
           <p class="mt-3 max-w-xl text-[13px] leading-6 text-white/82">
             Reach our sourcing team for buying support, factory quotes, shipping coordination, and B2B onboarding.
           </p>

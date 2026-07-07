@@ -251,7 +251,7 @@
       <footer class="border-t border-white/10 bg-slate-950 px-4 py-6 text-white shadow-[0_-10px_28px_rgba(0,0,0,0.18)]">
         <div class="mx-auto grid max-w-7xl gap-5 sm:grid-cols-2 xl:grid-cols-[1.1fr_0.8fr_1fr]">
           <div class="space-y-2">
-            <p class="text-[10px] font-bold uppercase tracking-[0.34em] text-white/75">Matrix Ecommerce</p>
+            <p class="text-[10px] font-bold uppercase tracking-[0.34em] text-white/75">Matrix Shop</p>
             <p class="text-[14px] font-black tracking-tight text-white">MatrixShop</p>
             <p class="text-[11px] leading-5 text-white/80">
               Mirpur, Pallabi Thana, Section -12, Dhaka-1216, Bangladesh.

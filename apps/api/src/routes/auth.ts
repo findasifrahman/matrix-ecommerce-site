@@ -242,9 +242,9 @@ async function sendOtpEmail(email: string, code: string, purpose: 'auth' | 'pass
   const label = purpose === 'password_reset' ? 'password reset' : 'sign in';
   await sendMail({
     to: email,
-    subject: `Your Matrix Ecommerce ${label} code`,
-    text: `Your Matrix Ecommerce ${label} code is ${code}. It expires in 10 minutes.`,
-    html: `<p>Your Matrix Ecommerce ${label} code is <strong>${code}</strong>.</p><p>It expires in 10 minutes.</p>`,
+    subject: `Your Matrix Shop ${label} code`,
+    text: `Your Matrix Shop ${label} code is ${code}. It expires in 10 minutes.`,
+    html: `<p>Your Matrix Shop ${label} code is <strong>${code}</strong>.</p><p>It expires in 10 minutes.</p>`,
   });
 }
 

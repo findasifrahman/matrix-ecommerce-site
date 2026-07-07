@@ -1,7 +1,7 @@
 <template>
   <div class="rounded-[1.5rem] bg-white" :class="framed ? 'border border-slate-200 p-6 shadow-sm' : ''">
     <div v-if="showLogo" class="text-center">
-      <img src="/logo_verticle.png" alt="Matrix Ecommerce" class="mx-auto h-20 w-auto object-contain" />
+      <img src="/logo_verticle.png" alt="Matrix Shop" class="mx-auto h-20 w-auto object-contain" />
     </div>
 
     <div :class="showLogo ? 'mt-5' : ''">
