@@ -238,7 +238,28 @@ const quickSearchChips = [
 ];
 
 function menuImage(label: string): string {
-  return `https://placehold.co/240x240/f8fafc/0f172a?text=${encodeURIComponent(label)}`;
+  const normalized = String(label || '')
+    .trim()
+    .toLowerCase()
+    .replace(/&/g, 'and')
+    .replace(/[^a-z0-9]+/g, '_')
+    .replace(/^_+|_+$/g, '');
+
+  const iconMap: Record<string, string> = {
+    phone_cover: '/menu_round_icons/mobile_cover.png',
+    mobile_cover: '/menu_round_icons/mobile_cover.png',
+    charger: '/menu_round_icons/charger.png',
+    phone_glass: '/menu_round_icons/mobile_glass.png',
+    mobile_glass: '/menu_round_icons/mobile_glass.png',
+    earbud: '/menu_round_icons/earbud.png',
+    cable: '/menu_round_icons/cable.png',
+    power_bank: '/menu_round_icons/power_bank.png',
+    phone_holder: '/menu_round_icons/phone_holder.png',
+    holder: '/menu_round_icons/phone_holder.png',
+    watch: '/menu_round_icons/watch.png',
+  };
+
+  return iconMap[normalized] || `https://placehold.co/240x240/f8fafc/0f172a?text=${encodeURIComponent(label)}`;
 }
 
 const defaultQuickMenuItems = [
@@ -259,7 +280,7 @@ const quickMenuItems = computed(() => {
     .filter((item: any) => item?.title && item?.searchKeyword)
     .map((item: any) => ({
       ...item,
-      imageUrl: item.imageUrl || menuImage(item.title),
+      imageUrl: menuImage(item.title),
       imageAlt: item.imageAlt || item.title,
     }));
 });
