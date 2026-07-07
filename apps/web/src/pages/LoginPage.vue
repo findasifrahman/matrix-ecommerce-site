@@ -25,7 +25,7 @@
           </button>
         </div>
         <div class="space-y-4">
-          <Input v-model="emailOrPhone" label="Email or phone" placeholder="admin@chinabuybd.com" />
+          <Input v-model="emailOrPhone" label="Email or phone" placeholder="admin@gmail.com" />
           <Input v-model="password" label="Password" type="password" />
           <Button type="submit" variant="primary" full-width :loading="passwordLoading">
             Sign in

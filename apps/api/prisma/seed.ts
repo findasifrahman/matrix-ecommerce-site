@@ -294,13 +294,13 @@ async function main() {
       category: 'phone-accessories',
       mainCategory: 'phone-accessories',
       productType: 'phone-cover',
-      title: 'iPhone 15 Pro Max Clear Case',
+      title: 'iPhone 15 Pro Max Clear Mobile Cover',
       price: 390,
       original_price: 490,
       stock_qty: 120,
       brand: 'Matrix Ecommerce',
-      description: 'Crystal clear shockproof mobile case for daily protection.',
-      tags: ['phone-cover', 'featured'],
+      description: 'Crystal clear shockproof mobile cover for daily protection and one of the most searched phone case styles in Bangladesh.',
+      tags: ['phone-cover', 'mobile-cover-bd', 'iphone-case', 'featured'],
       weight_kg: 0.08,
     },
     {
@@ -308,13 +308,13 @@ async function main() {
       category: 'phone-accessories',
       mainCategory: 'phone-accessories',
       productType: 'screen-protector',
-      title: 'Samsung Galaxy A55 Tempered Glass',
+      title: 'Samsung Galaxy A55 Tempered Glass Screen Protector',
       price: 180,
       original_price: 250,
       stock_qty: 80,
       brand: 'Matrix Ecommerce',
-      description: '9H screen protector for Samsung Galaxy A55 5G.',
-      tags: ['screen-protector', 'bestseller'],
+      description: '9H tempered glass screen protector for Samsung Galaxy A55 5G with the slim fit finish buyers usually search for in Bangladesh.',
+      tags: ['screen-protector', 'tempered-glass-bd', 'bestseller'],
       weight_kg: 0.04,
     },
     {
@@ -322,14 +322,56 @@ async function main() {
       category: 'phone-accessories',
       mainCategory: 'phone-accessories',
       productType: 'charger',
-      title: '25W Type-C Fast Charger',
+      title: '25W Type-C Fast Charger Adapter',
       price: 650,
       original_price: 790,
       stock_qty: 60,
       brand: 'Matrix Ecommerce',
-      description: 'Local-ready USB-C wall charger for phones and accessories.',
-      tags: ['charger', 'best-value'],
+      description: 'Local-ready USB-C fast charger adapter for phones, earbuds, and smart watches with strong everyday demand in Bangladesh.',
+      tags: ['charger', 'fast-charger-bd', 'best-value'],
       weight_kg: 0.12,
+    },
+    {
+      slug: 'baseus-10000mah-power-bank',
+      category: 'gadgets',
+      mainCategory: 'gadgets',
+      productType: 'power-bank',
+      title: '10000mAh Fast Charging Power Bank',
+      price: 1490,
+      original_price: 1790,
+      stock_qty: 44,
+      brand: 'Matrix Ecommerce',
+      description: 'Slim 10000mAh power bank for Android, iPhone, earbuds, and watch charging, targeting one of the most common gadget searches in Bangladesh.',
+      tags: ['power-bank', 'power-bank-price-bd', 'gadget-bd'],
+      weight_kg: 0.21,
+    },
+    {
+      slug: 'tws-wireless-earbuds-black',
+      category: 'gadgets',
+      mainCategory: 'gadgets',
+      productType: 'smart-gadget',
+      title: 'TWS Wireless Earbuds Black',
+      price: 1190,
+      original_price: 1490,
+      stock_qty: 52,
+      brand: 'Matrix Ecommerce',
+      description: 'Budget friendly wireless earbuds with charging case and strong Bluetooth performance for daily calls, music, and gaming.',
+      tags: ['wireless-earbuds', 'earbuds-price-bd', 'bluetooth-earbuds'],
+      weight_kg: 0.09,
+    },
+    {
+      slug: 'smart-watch-amoled-sport',
+      category: 'watches',
+      mainCategory: 'watches',
+      productType: 'watch-case',
+      title: 'AMOLED Smart Watch Sport Edition',
+      price: 2890,
+      original_price: 3490,
+      stock_qty: 36,
+      brand: 'Matrix Ecommerce',
+      description: 'Fitness-focused smart watch with bright AMOLED display, notification sync, and a price point aligned with popular Bangladesh smartwatch searches.',
+      tags: ['smart-watch', 'smart-watch-price-bd', 'watch'],
+      weight_kg: 0.11,
     },
   ];
 
@@ -382,7 +424,7 @@ async function main() {
 
   await syncHomepageHotDealsSeed([
     seededProducts.get('iphone-15-pro-max-clear-case')?.id,
-    seededProducts.get('type-c-fast-charger-25w')?.id,
+    seededProducts.get('baseus-10000mah-power-bank')?.id,
   ]);
   console.log('Homepage hot items created');
 
@@ -437,13 +479,170 @@ async function main() {
   console.log('Homepage visual menu created');
 
   await prisma.blogPost.upsert({
-    where: { slug: 'welcome-to-matrix-ecommerce' },
-    update: {},
+    where: { slug: 'mobile-accessories-price-in-bangladesh-guide' },
+    update: {
+      title: 'Mobile Accessories Price in Bangladesh: What People Search Before Buying',
+      excerpt: 'A keyword-focused buying guide covering phone cover, tempered glass, charger, earbuds, power bank, and smart watch demand in Bangladesh.',
+      content_md: `# Mobile Accessories Price in Bangladesh
+
+People in Bangladesh usually search with strong buying intent. The highest-value phrases are tied to accessory type plus a location or price cue.
+
+## High-intent keywords shoppers actually use
+
+- mobile accessories bd
+- mobile accessories online shop in bangladesh
+- mobile cover price in bangladesh
+- tempered glass price in bangladesh
+- fast charger price in bangladesh
+- type c cable price in bangladesh
+- wireless earbuds price in bangladesh
+- power bank price in bangladesh
+- smart watch price in bangladesh
+
+## What sells best in everyday search
+
+Phone cover, tempered glass, charger, cable, earbuds, power bank, and smart watch products convert well because customers already know what they need. The main job of the store page is to show compatibility, price clarity, and fast delivery.
+
+## How to choose a better accessory shop
+
+Look for exact phone model support, clear delivery fees inside and outside Dhaka, and photos that show texture, ports, and packaging. This reduces support questions and increases conversion.
+`,
+      status: 'published',
+      published_at: new Date(),
+      created_by: admin.id,
+    },
     create: {
-      slug: 'welcome-to-matrix-ecommerce',
-      title: 'Welcome to Matrix Ecommerce',
-      excerpt: 'How the new shopping-first workflow works.',
-      content_md: '# Matrix Ecommerce\n\nA shopping-first admin-uploaded product experience.',
+      slug: 'mobile-accessories-price-in-bangladesh-guide',
+      title: 'Mobile Accessories Price in Bangladesh: What People Search Before Buying',
+      excerpt: 'A keyword-focused buying guide covering phone cover, tempered glass, charger, earbuds, power bank, and smart watch demand in Bangladesh.',
+      content_md: `# Mobile Accessories Price in Bangladesh
+
+People in Bangladesh usually search with strong buying intent. The highest-value phrases are tied to accessory type plus a location or price cue.
+
+## High-intent keywords shoppers actually use
+
+- mobile accessories bd
+- mobile accessories online shop in bangladesh
+- mobile cover price in bangladesh
+- tempered glass price in bangladesh
+- fast charger price in bangladesh
+- type c cable price in bangladesh
+- wireless earbuds price in bangladesh
+- power bank price in bangladesh
+- smart watch price in bangladesh
+
+## What sells best in everyday search
+
+Phone cover, tempered glass, charger, cable, earbuds, power bank, and smart watch products convert well because customers already know what they need. The main job of the store page is to show compatibility, price clarity, and fast delivery.
+
+## How to choose a better accessory shop
+
+Look for exact phone model support, clear delivery fees inside and outside Dhaka, and photos that show texture, ports, and packaging. This reduces support questions and increases conversion.
+`,
+      status: 'published',
+      published_at: new Date(),
+      created_by: admin.id,
+    },
+  });
+
+  await prisma.blogPost.upsert({
+    where: { slug: 'best-phone-cover-tempered-glass-bangladesh' },
+    update: {
+      title: 'Best Phone Cover and Tempered Glass in Bangladesh for Daily Protection',
+      excerpt: 'Why mobile cover and tempered glass searches dominate Bangladesh accessory shopping and how to build product pages that convert.',
+      content_md: `# Best Phone Cover and Tempered Glass in Bangladesh
+
+Phone protection is one of the most repeated accessory search patterns in Bangladesh because buyers upgrade protection as soon as they buy a new device.
+
+## Search phrases worth targeting
+
+- best phone cover in bangladesh
+- iphone case price in bangladesh
+- samsung tempered glass price in bangladesh
+- shockproof mobile cover
+- camera protector for iphone
+
+## Product page angle that works
+
+Lead with the exact model name, mention material, and explain edge protection, camera lip, and yellowing resistance. For tempered glass, mention hardness, thickness, and touch response.
+`,
+      status: 'published',
+      published_at: new Date(Date.now() - 86400000),
+      created_by: admin.id,
+    },
+    create: {
+      slug: 'best-phone-cover-tempered-glass-bangladesh',
+      title: 'Best Phone Cover and Tempered Glass in Bangladesh for Daily Protection',
+      excerpt: 'Why mobile cover and tempered glass searches dominate Bangladesh accessory shopping and how to build product pages that convert.',
+      content_md: `# Best Phone Cover and Tempered Glass in Bangladesh
+
+Phone protection is one of the most repeated accessory search patterns in Bangladesh because buyers upgrade protection as soon as they buy a new device.
+
+## Search phrases worth targeting
+
+- best phone cover in bangladesh
+- iphone case price in bangladesh
+- samsung tempered glass price in bangladesh
+- shockproof mobile cover
+- camera protector for iphone
+
+## Product page angle that works
+
+Lead with the exact model name, mention material, and explain edge protection, camera lip, and yellowing resistance. For tempered glass, mention hardness, thickness, and touch response.
+`,
+      status: 'published',
+      published_at: new Date(Date.now() - 86400000),
+      created_by: admin.id,
+    },
+  });
+
+  await prisma.blogPost.upsert({
+    where: { slug: 'power-bank-earbuds-smart-watch-price-bangladesh' },
+    update: {
+      title: 'Power Bank, Earbuds, and Smart Watch Price in Bangladesh: 3 Fast-Growing Accessory Searches',
+      excerpt: 'A compact SEO article for the gadget and wearable keywords that are trending across Bangladesh accessory shops.',
+      content_md: `# Power Bank, Earbuds, and Smart Watch Price in Bangladesh
+
+Audio gear, charging gadgets, and wearables are rising because they solve daily battery, entertainment, and fitness needs.
+
+## Search phrases to include naturally
+
+- power bank price in bangladesh
+- 10000mah power bank price in bangladesh
+- wireless earbuds price in bangladesh
+- bluetooth earbuds bd
+- smart watch price in bangladesh
+- amoled smart watch bd
+
+## Merchandising tips
+
+Bundle power banks with chargers and cables. Cross-link earbuds with charger accessories. Put smart watch compatibility, display type, and battery backup near the top of the product description.
+`,
+      status: 'published',
+      published_at: new Date(Date.now() - 172800000),
+      created_by: admin.id,
+    },
+    create: {
+      slug: 'power-bank-earbuds-smart-watch-price-bangladesh',
+      title: 'Power Bank, Earbuds, and Smart Watch Price in Bangladesh: 3 Fast-Growing Accessory Searches',
+      excerpt: 'A compact SEO article for the gadget and wearable keywords that are trending across Bangladesh accessory shops.',
+      content_md: `# Power Bank, Earbuds, and Smart Watch Price in Bangladesh
+
+Audio gear, charging gadgets, and wearables are rising because they solve daily battery, entertainment, and fitness needs.
+
+## Search phrases to include naturally
+
+- power bank price in bangladesh
+- 10000mah power bank price in bangladesh
+- wireless earbuds price in bangladesh
+- bluetooth earbuds bd
+- smart watch price in bangladesh
+- amoled smart watch bd
+
+## Merchandising tips
+
+Bundle power banks with chargers and cables. Cross-link earbuds with charger accessories. Put smart watch compatibility, display type, and battery backup near the top of the product description.
+`,
       status: 'published',
       published_at: new Date(),
       created_by: admin.id,

@@ -35,14 +35,14 @@ export const HOMEPAGE_VISUAL_MENU_SECTIONS: HomepageVisualMenuSectionSeed[] = [
     section_label: 'Quick menu',
     section_sort_order: 0,
     items: [
-      { title: 'Phone Cover', search_keyword: 'phone cover', image_url: PHONE_COVER_IMAGE, image_alt: 'Phone cover', sort_order: 1 },
-      { title: 'Charger', search_keyword: 'charger', image_url: CHARGER_IMAGE, image_alt: 'Charger', sort_order: 2 },
-      { title: 'Phone Glass', search_keyword: 'phone glass', image_url: PHONE_GLASS_IMAGE, image_alt: 'Phone glass', sort_order: 3 },
-      { title: 'Earbud', search_keyword: 'earbud', image_url: EARBUD_IMAGE, image_alt: 'Earbud', sort_order: 4 },
-      { title: 'Cable', search_keyword: 'cable', image_url: CABLE_IMAGE, image_alt: 'Cable', sort_order: 5 },
-      { title: 'Power Bank', search_keyword: 'power bank', image_url: POWER_BANK_IMAGE, image_alt: 'Power bank', sort_order: 6 },
-      { title: 'Phone Holder', search_keyword: 'phone holder', image_url: HOLDER_IMAGE, image_alt: 'Phone holder', sort_order: 7 },
-      { title: 'Watch', search_keyword: 'watch strap', image_url: WATCH_IMAGE, image_alt: 'Watch', sort_order: 8 },
+      { title: 'Phone Cover', search_keyword: 'mobile cover price in bangladesh', image_url: PHONE_COVER_IMAGE, image_alt: 'Phone cover', sort_order: 1 },
+      { title: 'Charger', search_keyword: 'fast charger price in bangladesh', image_url: CHARGER_IMAGE, image_alt: 'Charger', sort_order: 2 },
+      { title: 'Phone Glass', search_keyword: 'tempered glass price in bangladesh', image_url: PHONE_GLASS_IMAGE, image_alt: 'Phone glass', sort_order: 3 },
+      { title: 'Earbud', search_keyword: 'wireless earbuds price in bangladesh', image_url: EARBUD_IMAGE, image_alt: 'Earbud', sort_order: 4 },
+      { title: 'Cable', search_keyword: 'type c cable price in bangladesh', image_url: CABLE_IMAGE, image_alt: 'Cable', sort_order: 5 },
+      { title: 'Power Bank', search_keyword: 'power bank price in bangladesh', image_url: POWER_BANK_IMAGE, image_alt: 'Power bank', sort_order: 6 },
+      { title: 'Phone Holder', search_keyword: 'phone holder for bike car in bangladesh', image_url: HOLDER_IMAGE, image_alt: 'Phone holder', sort_order: 7 },
+      { title: 'Watch', search_keyword: 'smart watch price in bangladesh', image_url: WATCH_IMAGE, image_alt: 'Watch', sort_order: 8 },
     ],
   },
   {
@@ -50,7 +50,7 @@ export const HOMEPAGE_VISUAL_MENU_SECTIONS: HomepageVisualMenuSectionSeed[] = [
     section_label: 'You may like',
     section_sort_order: 1,
     items: [
-      { title: 'You may like', search_keyword: 'phone accessories', image_url: PHONE_COVER_IMAGE, image_alt: 'You may like', sort_order: 1 },
+      { title: 'You may like', search_keyword: 'mobile accessories bd online shop', image_url: PHONE_COVER_IMAGE, image_alt: 'You may like', sort_order: 1 },
     ],
   },
   {
@@ -58,7 +58,7 @@ export const HOMEPAGE_VISUAL_MENU_SECTIONS: HomepageVisualMenuSectionSeed[] = [
     section_label: 'Phone cover',
     section_sort_order: 2,
     items: [
-      { title: 'Phone cover', search_keyword: 'phone cover', image_url: PHONE_COVER_IMAGE, image_alt: 'Phone cover', sort_order: 1 },
+      { title: 'Phone cover', search_keyword: 'best mobile cover in bangladesh', image_url: PHONE_COVER_IMAGE, image_alt: 'Phone cover', sort_order: 1 },
     ],
   },
   {
@@ -66,7 +66,7 @@ export const HOMEPAGE_VISUAL_MENU_SECTIONS: HomepageVisualMenuSectionSeed[] = [
     section_label: 'Charger',
     section_sort_order: 3,
     items: [
-      { title: 'Charger', search_keyword: 'charger', image_url: CHARGER_IMAGE, image_alt: 'Charger', sort_order: 1 },
+      { title: 'Charger', search_keyword: 'original mobile charger in bangladesh', image_url: CHARGER_IMAGE, image_alt: 'Charger', sort_order: 1 },
     ],
   },
   {
@@ -74,7 +74,7 @@ export const HOMEPAGE_VISUAL_MENU_SECTIONS: HomepageVisualMenuSectionSeed[] = [
     section_label: 'Power bank',
     section_sort_order: 4,
     items: [
-      { title: 'Power Bank', search_keyword: 'power bank', image_url: POWER_BANK_IMAGE, image_alt: 'Power bank', sort_order: 1 },
+      { title: 'Power Bank', search_keyword: '10000mah power bank price in bangladesh', image_url: POWER_BANK_IMAGE, image_alt: 'Power bank', sort_order: 1 },
     ],
   },
   {
@@ -82,7 +82,7 @@ export const HOMEPAGE_VISUAL_MENU_SECTIONS: HomepageVisualMenuSectionSeed[] = [
     section_label: 'Earbud',
     section_sort_order: 5,
     items: [
-      { title: 'Earbud', search_keyword: 'earbud', image_url: EARBUD_IMAGE, image_alt: 'Earbud', sort_order: 1 },
+      { title: 'Earbud', search_keyword: 'bluetooth earbuds price in bangladesh', image_url: EARBUD_IMAGE, image_alt: 'Earbud', sort_order: 1 },
     ],
   },
 ];

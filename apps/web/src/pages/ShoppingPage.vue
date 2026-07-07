@@ -250,6 +250,7 @@ import { Button, useToast } from '@matrix-ecommerce/ui';
 import ProductCard from '@/components/shopping/ProductCard.vue';
 import { useShoppingCart } from '@/composables/useShoppingCart';
 import { getYouMayLikeProducts, recordMenuIntent, recordProductIntent } from '@/utils/shopping-personalization';
+import { useSeo } from '@/utils/seo';
 
 const router = useRouter();
 const toast = useToast();
@@ -273,14 +274,22 @@ let heroTimer: number | null = null;
 const activeHero = computed(() => heroBanners.value[activeHeroIndex.value] || null);
 const activeHeroImage = computed(() => activeHero.value?.coverAsset?.public_url || activeHero.value?.coverAsset?.thumbnail_url || fallbackThumb);
 const activeHeroTitle = computed(() => activeHero.value?.title || 'Premium accessories for your store-ready phone setup.');
-const activeHeroSubtitle = computed(() => activeHero.value?.subtitle || 'We Sell World class brands and accessories for your phone. Get the best deals and fast delivery with Matrix Shop.');
+const activeHeroSubtitle = computed(() => activeHero.value?.subtitle || 'Shop mobile cover, tempered glass, fast charger, earbuds, power bank, and smart watch deals with fast delivery across Bangladesh.');
 
 const quickSearchChips = [
-  { label: 'Phone cover', keyword: 'phone cover' },
-  { label: 'Charger', keyword: 'charger' },
-  { label: 'Earbud', keyword: 'earbud' },
-  { label: 'Power bank', keyword: 'power bank' },
+  { label: 'Mobile cover', keyword: 'mobile cover price in bangladesh' },
+  { label: 'Tempered glass', keyword: 'tempered glass price in bangladesh' },
+  { label: 'Fast charger', keyword: 'fast charger price in bangladesh' },
+  { label: 'Wireless earbuds', keyword: 'wireless earbuds price in bangladesh' },
+  { label: 'Power bank', keyword: 'power bank price in bangladesh' },
+  { label: 'Smart watch', keyword: 'smart watch price in bangladesh' },
 ];
+
+useSeo(() => ({
+  title: 'Matrix Shop Bangladesh | Mobile Accessories, Gadgets, Smart Watch',
+  description: 'Shop mobile accessories in Bangladesh including mobile cover, tempered glass, fast charger, earbuds, power bank, cable, and smart watch offers.',
+  keywords: 'mobile accessories bd, mobile cover price in bangladesh, tempered glass price in bangladesh, charger price in bangladesh, wireless earbuds price in bangladesh, power bank price in bangladesh, smart watch price in bangladesh',
+}));
 
 const mobilePhoneCategory = computed(() =>
   storefrontTaxonomy.value.find((category: any) => category?.slug === 'phone-accessories')

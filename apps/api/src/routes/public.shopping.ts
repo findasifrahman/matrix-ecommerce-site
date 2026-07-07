@@ -103,6 +103,28 @@ function buildHomepageVisualMenuSections(rows: any[]) {
 }
 
 export default async function publicShoppingRoutes(fastify: FastifyInstance) {
+  fastify.get('/blog', async () => {
+    const posts = await prisma.blogPost.findMany({
+      where: { status: 'published' },
+      select: {
+        id: true,
+        slug: true,
+        title: true,
+        excerpt: true,
+        content_md: true,
+        published_at: true,
+        created_at: true,
+      },
+      orderBy: [{ published_at: 'desc' }, { created_at: 'desc' }],
+      take: 24,
+    });
+
+    return posts.map((post) => ({
+      ...post,
+      readingTimeMinutes: Math.max(2, Math.ceil(String(post.content_md || '').split(/\s+/).filter(Boolean).length / 180)),
+    }));
+  });
+
   fastify.get('/shopping/categories', async () => getCategories());
 
   fastify.get('/shopping/home-visual-menu', async () => {
