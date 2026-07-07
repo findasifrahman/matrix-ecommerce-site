@@ -5,7 +5,7 @@
         <div class="grid lg:grid-cols-[minmax(0,1.05fr)_minmax(380px,0.95fr)]">
           <div class="bg-[radial-gradient(circle_at_top_left,#fdba74,transparent_25%),linear-gradient(135deg,#0f172a_0%,#1e293b_46%,#9a3412_100%)] px-6 py-8 text-white sm:px-8 lg:px-10">
             <p class="text-[10px] font-bold uppercase tracking-[0.36em] text-orange-200">Contact Matrix Shop</p>
-            <h1 class="mt-3 max-w-2xl text-[34px] font-black tracking-tight sm:text-[48px]">
+            <h1 class="mt-3 max-w-2xl text-[34px] font-white tracking-tight sm:text-[48px]">
               Dhaka support for mobile accessories, gadgets, and smart watch buyers
             </h1>
             <p class="mt-4 max-w-2xl text-sm leading-7 text-slate-100/90 sm:text-base">

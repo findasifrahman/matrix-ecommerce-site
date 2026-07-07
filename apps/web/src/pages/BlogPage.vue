@@ -4,8 +4,8 @@
       <section class="overflow-hidden rounded-[32px] border border-orange-100 bg-[linear-gradient(135deg,#0f172a_0%,#7c2d12_55%,#f97316_100%)] px-6 py-8 text-white shadow-[0_30px_90px_rgba(15,23,42,0.22)] sm:px-8 lg:px-10">
         <div class="grid gap-8 lg:grid-cols-[minmax(0,1.2fr)_360px]">
           <div>
-            <p class="text-[10px] font-bold uppercase tracking-[0.36em] text-orange-200">SEO Blog</p>
-            <h1 class="mt-3 max-w-4xl text-[34px] font-black tracking-tight sm:text-[48px]">
+            <p class="text-[10px] font-bold uppercase tracking-[0.36em] text-orange-200">Blog</p>
+            <h1 class="mt-3 max-w-4xl text-[34px] font-white tracking-tight sm:text-[48px]">
               Bangladesh mobile accessories blog built around what people actually search
             </h1>
             <p class="mt-4 max-w-3xl text-sm leading-7 text-orange-50/90 sm:text-base">
