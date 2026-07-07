@@ -2202,15 +2202,46 @@ export default async function adminRoutes(fastify: FastifyInstance) {
   });
 
   fastify.get('/media', { preHandler: auth }, async (request: FastifyRequest) => {
-    const query = request.query as { page?: string; limit?: string; search?: string; category?: string };
+    const query = request.query as {
+      page?: string;
+      limit?: string;
+      search?: string;
+      category?: string;
+      main_category_id?: string;
+      brand_id?: string;
+      brand_model_id?: string;
+      product_type_id?: string;
+      general?: string;
+    };
     const page = Math.max(1, parseInt(query.page || '1', 10));
     const limit = Math.max(1, Math.min(100, parseInt(query.limit || '24', 10)));
     const search = query.search?.trim();
     const category = query.category?.trim();
+    const mainCategoryId = query.main_category_id?.trim();
+    const brandId = query.brand_id?.trim();
+    const brandModelId = query.brand_model_id?.trim();
+    const productTypeId = query.product_type_id?.trim();
+    const generalOnly = query.general === '1';
 
     const where: any = {};
     if (category) {
       where.category = category;
+    }
+    if (mainCategoryId) {
+      where.main_category_id = mainCategoryId;
+    }
+    if (brandId) {
+      where.brand_id = brandId;
+    }
+    if (brandModelId) {
+      where.brand_model_id = brandModelId;
+    }
+    if (productTypeId) {
+      where.product_type_id = productTypeId;
+    }
+    if (generalOnly) {
+      where.brand_id = null;
+      where.brand_model_id = null;
     }
     if (search) {
       where.OR = [
@@ -2232,6 +2263,10 @@ export default async function adminRoutes(fastify: FastifyInstance) {
               phone: true,
             },
           },
+          mainCategory: true,
+          taxonomyBrand: true,
+          brandModel: true,
+          productType: true,
         },
         orderBy: { created_at: 'desc' },
         skip: (page - 1) * limit,
@@ -2270,6 +2305,10 @@ export default async function adminRoutes(fastify: FastifyInstance) {
             phone: true,
           },
         },
+        mainCategory: true,
+        taxonomyBrand: true,
+        brandModel: true,
+        productType: true,
       },
     });
 
@@ -2356,13 +2395,31 @@ export default async function adminRoutes(fastify: FastifyInstance) {
         tags.unshift(`title:${meta.title}`);
       }
 
+      const isGeneral = meta.product_type_id === '__GENERAL__' || meta.category === 'general';
+      if (!meta.main_category_id) {
+        return reply.status(400).send({ error: 'Main category is required for media uploads' });
+      }
+      if (!meta.product_type_id && !isGeneral) {
+        return reply.status(400).send({ error: 'Product type is required for media uploads' });
+      }
+      if (!isGeneral && !meta.brand_id) {
+        return reply.status(400).send({ error: 'Brand is required unless this media is marked as general' });
+      }
+      if (!isGeneral && !meta.brand_model_id) {
+        return reply.status(400).send({ error: 'Model is required unless this media is marked as general' });
+      }
+
       const asset = await prisma.mediaAsset.create({
         data: {
           r2_key: key,
           public_url: publicUrl,
           mime_type: fileData.mimetype,
           size: fileBuffer.length,
-          category: meta.category || null,
+          category: isGeneral ? 'general' : (meta.category || null),
+          main_category_id: meta.main_category_id || null,
+          brand_id: isGeneral ? null : (meta.brand_id || null),
+          brand_model_id: isGeneral ? null : (meta.brand_model_id || null),
+          product_type_id: isGeneral ? null : (meta.product_type_id || null),
           tags,
           uploaded_by: req.user.id,
         },
@@ -2404,11 +2461,30 @@ export default async function adminRoutes(fastify: FastifyInstance) {
       nextTags.unshift(`title:${body.title}`);
     }
 
+    const isGeneral = body.product_type_id === '__GENERAL__' || body.category === 'general';
+
     const updated = await prisma.mediaAsset.update({
       where: { id },
       data: {
         category: body.category ?? undefined,
+        main_category_id: body.main_category_id ?? undefined,
+        brand_id: isGeneral ? null : body.brand_id ?? undefined,
+        brand_model_id: isGeneral ? null : body.brand_model_id ?? undefined,
+        product_type_id: isGeneral ? null : body.product_type_id ?? undefined,
         tags: nextTags,
+      },
+      include: {
+        uploader: {
+          select: {
+            id: true,
+            email: true,
+            phone: true,
+          },
+        },
+        mainCategory: true,
+        taxonomyBrand: true,
+        brandModel: true,
+        productType: true,
       },
     } as any);
 

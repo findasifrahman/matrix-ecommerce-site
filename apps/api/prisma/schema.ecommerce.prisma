@@ -214,12 +214,20 @@ model MediaAsset {
   uploaded_by            String
   created_at             DateTime          @default(now())
   category               String?
+  main_category_id       String?
+  brand_id               String?
+  brand_model_id         String?
+  product_type_id        String?
   height                 Int?
   tags                   String[]          @default([])
   thumbnail_key          String?
   thumbnail_url          String?
   width                  Int?
   uploader               User              @relation(fields: [uploaded_by], references: [id])
+  mainCategory           MainCategory?     @relation(fields: [main_category_id], references: [id], onDelete: SetNull)
+  taxonomyBrand          Brand?            @relation(fields: [brand_id], references: [id], onDelete: SetNull)
+  brandModel             BrandModel?       @relation(fields: [brand_model_id], references: [id], onDelete: SetNull)
+  productType            ProductType?      @relation(fields: [product_type_id], references: [id], onDelete: SetNull)
   customerProfileAvatars CustomerProfile[] @relation("CustomerProfileAvatar")
   sellerLogoAssets       SellerProfile[]   @relation("SellerLogo")
   sellerBannerAssets     SellerProfile[]   @relation("SellerBanner")
@@ -233,6 +241,10 @@ model MediaAsset {
   @@index([uploaded_by])
   @@index([category])
   @@index([tags])
+  @@index([main_category_id])
+  @@index([brand_id])
+  @@index([brand_model_id])
+  @@index([product_type_id])
   @@map("media_assets")
 }
 
@@ -363,6 +375,7 @@ model MainCategory {
   brandLinks           CategoryBrand[]
   productTypes         ProductType[]
   products             Product[]
+  mediaAssets          MediaAsset[]
 
   @@index([is_active, sort_order])
   @@index([slug])
@@ -380,6 +393,7 @@ model Brand {
   categoryLinks CategoryBrand[]
   models        BrandModel[]
   products      Product[]
+  mediaAssets   MediaAsset[]
 
   @@index([is_active, sort_order])
   @@index([slug])
@@ -412,6 +426,7 @@ model BrandModel {
   updated_at DateTime  @updatedAt
   brand      Brand     @relation(fields: [brand_id], references: [id], onDelete: Cascade)
   products   Product[]
+  mediaAssets MediaAsset[]
 
   @@unique([brand_id, slug])
   @@index([brand_id, is_active, sort_order])
@@ -429,6 +444,7 @@ model ProductType {
   updated_at       DateTime     @updatedAt
   mainCategory     MainCategory @relation(fields: [main_category_id], references: [id], onDelete: Cascade)
   products         Product[]
+  mediaAssets      MediaAsset[]
 
   @@unique([main_category_id, slug])
   @@index([main_category_id, is_active, sort_order])

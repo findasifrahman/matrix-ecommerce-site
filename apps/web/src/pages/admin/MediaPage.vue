@@ -45,13 +45,53 @@
           </div>
           <div class="w-48">
             <select
-              v-model="selectedCategory"
+              v-model="selectedMainCategoryId"
               @change="handleCategoryChange"
-              :disabled="loadingCategories"
+              :disabled="loadingTaxonomy"
+              class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2 focus:border-teal-500 disabled:bg-slate-50 disabled:text-slate-500 disabled:cursor-not-allowed transition-colors bg-white"
+            >
+              <option value="">All main categories</option>
+              <option v-for="item in mainCategories" :key="item.id" :value="item.id">
+                {{ item.name }}
+              </option>
+            </select>
+          </div>
+          <div class="w-48">
+            <select
+              v-model="selectedBrandId"
+              @change="handleCategoryChange"
+              :disabled="loadingTaxonomy"
+              class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2 focus:border-teal-500 disabled:bg-slate-50 disabled:text-slate-500 disabled:cursor-not-allowed transition-colors bg-white"
+            >
+              <option value="">All brands</option>
+              <option v-for="brand in filterBrandOptions" :key="brand.value" :value="brand.value">
+                {{ brand.label }}
+              </option>
+            </select>
+          </div>
+          <div class="w-48">
+            <select
+              v-model="selectedBrandModelId"
+              @change="handleCategoryChange"
+              :disabled="loadingTaxonomy"
+              class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2 focus:border-teal-500 disabled:bg-slate-50 disabled:text-slate-500 disabled:cursor-not-allowed transition-colors bg-white"
+            >
+              <option value="">All models</option>
+              <option v-for="model in filterBrandModelOptions" :key="model.value" :value="model.value">
+                {{ model.label }}
+              </option>
+            </select>
+          </div>
+          <div class="w-48">
+            <select
+              v-model="selectedProductTypeId"
+              @change="handleCategoryChange"
+              :disabled="loadingTaxonomy"
               class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2 focus:border-teal-500 disabled:bg-slate-50 disabled:text-slate-500 disabled:cursor-not-allowed transition-colors bg-white"
             >
               <option value="">All Product Types</option>
-              <option v-for="type in productTypes" :key="type.id" :value="type.slug">
+              <option value="__GENERAL__">General</option>
+              <option v-for="type in filteredProductTypes" :key="type.id" :value="type.id">
                 {{ type.mainCategory?.name ? `${type.mainCategory.name} / ${type.name}` : type.name }}
               </option>
             </select>
@@ -169,28 +209,38 @@
           />
         </div>
 
-        <div>
-          <label class="block text-sm font-medium text-slate-700 mb-2">
-            Product type (Optional)
-          </label>
-          <select
-            v-model="uploadCategory"
-            :disabled="loadingProductTypes"
-            class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2 focus:border-teal-500 disabled:bg-slate-50 disabled:text-slate-500 disabled:cursor-not-allowed transition-colors bg-white"
-          >
-            <option value="">None</option>
-            <option v-for="type in productTypes" :key="type.id" :value="type.slug">
-              {{ type.mainCategory?.name ? `${type.mainCategory.name} / ${type.name}` : type.name }}
-            </option>
-          </select>
-          <p v-if="loadingProductTypes" class="text-xs text-slate-500 mt-1">Loading product types...</p>
-          <p v-else-if="productTypes.length === 0" class="text-xs text-amber-600 mt-1">
-            No product types found. Make sure the shopping taxonomy is seeded.
-          </p>
-          <p v-else class="text-xs text-slate-500 mt-1">
-            {{ productTypes.length }} product types loaded
-          </p>
+        <div class="grid gap-4 md:grid-cols-2">
+          <div>
+            <label class="block text-sm font-medium text-slate-700 mb-2">Main category</label>
+            <select v-model="uploadForm.main_category_id" :disabled="loadingTaxonomy" class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2 focus:border-teal-500 disabled:bg-slate-50 disabled:text-slate-500 disabled:cursor-not-allowed transition-colors bg-white">
+              <option value="">Select main category</option>
+              <option v-for="item in mainCategories" :key="item.id" :value="item.id">{{ item.name }}</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-slate-700 mb-2">Product type</label>
+            <select v-model="uploadForm.product_type_id" :disabled="loadingTaxonomy" class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2 focus:border-teal-500 disabled:bg-slate-50 disabled:text-slate-500 disabled:cursor-not-allowed transition-colors bg-white">
+              <option value="">Select product type</option>
+              <option value="__GENERAL__">General</option>
+              <option v-for="type in uploadProductTypeOptions" :key="type.value" :value="type.value">{{ type.label }}</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-slate-700 mb-2">Brand</label>
+            <select v-model="uploadForm.brand_id" :disabled="loadingTaxonomy || uploadForm.product_type_id === '__GENERAL__'" class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2 focus:border-teal-500 disabled:bg-slate-50 disabled:text-slate-500 disabled:cursor-not-allowed transition-colors bg-white">
+              <option v-for="brand in uploadBrandOptions" :key="brand.value" :value="brand.value">{{ brand.label }}</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-slate-700 mb-2">Model</label>
+            <select v-model="uploadForm.brand_model_id" :disabled="loadingTaxonomy || uploadForm.product_type_id === '__GENERAL__'" class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2 focus:border-teal-500 disabled:bg-slate-50 disabled:text-slate-500 disabled:cursor-not-allowed transition-colors bg-white">
+              <option v-for="model in uploadBrandModelOptions" :key="model.value" :value="model.value">{{ model.label }}</option>
+            </select>
+          </div>
         </div>
+        <p class="text-xs text-slate-500">
+          Media uploads must be assigned to the same taxonomy path used by products. Use <strong>General</strong> when the image is not brand/model-specific.
+        </p>
 
         <div>
           <label class="block text-sm font-medium text-slate-700 mb-2">
@@ -247,20 +297,34 @@
           </div>
         </div>
 
-        <div>
-          <label class="block text-sm font-medium text-slate-700 mb-2">
-            Product type
-          </label>
-          <select
-            v-model="editForm.category"
-            :disabled="loadingProductTypes"
-            class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2 focus:border-teal-500 disabled:bg-slate-50 disabled:text-slate-500 disabled:cursor-not-allowed transition-colors bg-white"
-          >
-            <option value="">None</option>
-            <option v-for="type in productTypes" :key="type.id" :value="type.slug">
-              {{ type.mainCategory?.name ? `${type.mainCategory.name} / ${type.name}` : type.name }}
-            </option>
-          </select>
+        <div class="grid gap-4 md:grid-cols-2">
+          <div>
+            <label class="block text-sm font-medium text-slate-700 mb-2">Main category</label>
+            <select v-model="editForm.main_category_id" :disabled="loadingTaxonomy" class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2 focus:border-teal-500 disabled:bg-slate-50 disabled:text-slate-500 disabled:cursor-not-allowed transition-colors bg-white">
+              <option value="">Select main category</option>
+              <option v-for="item in mainCategories" :key="item.id" :value="item.id">{{ item.name }}</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-slate-700 mb-2">Product type</label>
+            <select v-model="editForm.product_type_id" :disabled="loadingTaxonomy" class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2 focus:border-teal-500 disabled:bg-slate-50 disabled:text-slate-500 disabled:cursor-not-allowed transition-colors bg-white">
+              <option value="">Select product type</option>
+              <option value="__GENERAL__">General</option>
+              <option v-for="type in editProductTypeOptions" :key="type.value" :value="type.value">{{ type.label }}</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-slate-700 mb-2">Brand</label>
+            <select v-model="editForm.brand_id" :disabled="loadingTaxonomy || editForm.product_type_id === '__GENERAL__'" class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2 focus:border-teal-500 disabled:bg-slate-50 disabled:text-slate-500 disabled:cursor-not-allowed transition-colors bg-white">
+              <option v-for="brand in editBrandOptions" :key="brand.value" :value="brand.value">{{ brand.label }}</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-slate-700 mb-2">Model</label>
+            <select v-model="editForm.brand_model_id" :disabled="loadingTaxonomy || editForm.product_type_id === '__GENERAL__'" class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2 focus:border-teal-500 disabled:bg-slate-50 disabled:text-slate-500 disabled:cursor-not-allowed transition-colors bg-white">
+              <option v-for="model in editBrandModelOptions" :key="model.value" :value="model.value">{{ model.label }}</option>
+            </select>
+          </div>
         </div>
 
         <div>
@@ -333,7 +397,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { computed, onMounted, reactive, ref, watch } from 'vue';
 import axios from '@/utils/axios';
 import { useToast } from '@matrix-ecommerce/ui';
 import { 
@@ -355,7 +419,10 @@ const MAX_FILE_SIZE = 3.5 * 1024 * 1024; // 3.5MB
 
 const media = ref<any[]>([]);
 const searchQuery = ref('');
-const selectedCategory = ref('');
+const selectedMainCategoryId = ref('');
+const selectedBrandId = ref('');
+const selectedBrandModelId = ref('');
+const selectedProductTypeId = ref('');
 const currentPage = ref(1);
 const totalPages = ref(1);
 const total = ref(0);
@@ -364,25 +431,77 @@ const selectedFile = ref<File | null>(null);
 const previewUrl = ref<string>('');
 const uploading = ref(false);
 const loading = ref(false);
-const loadingProductTypes = ref(false);
+const loadingTaxonomy = ref(false);
 const r2NotConfigured = ref(false);
 const fileError = ref('');
-const uploadCategory = ref('');
 const uploadTags = ref('');
 const selectedMedia = ref<string[]>([]);
 const showBulkDeleteConfirm = ref(false);
 const showSingleDeleteConfirm = ref(false);
 const deleteMediaId = ref('');
+const mainCategories = ref<any[]>([]);
+const brands = ref<any[]>([]);
 const productTypes = ref<any[]>([]);
 const showEditModal = ref(false);
 const editingMedia = ref<any>(null);
 const savingMetadata = ref(false);
-const editForm = ref({
+const uploadForm = reactive({
+  main_category_id: '',
+  brand_id: '__NONE__',
+  brand_model_id: '__NONE__',
+  product_type_id: '',
+});
+const editForm = reactive({
+  main_category_id: '',
+  brand_id: '__NONE__',
+  brand_model_id: '__NONE__',
+  product_type_id: '',
   category: '',
   tagsText: '',
   title: '',
 });
 const toast = useToast();
+
+const filterBrandOptions = computed(() => brandsForMainCategory(selectedMainCategoryId.value, false));
+const filterBrandModelOptions = computed(() => brandModelsForBrand(selectedBrandId.value, false));
+const filteredProductTypes = computed(() =>
+  productTypes.value.filter((type) => !selectedMainCategoryId.value || type.main_category_id === selectedMainCategoryId.value),
+);
+const uploadBrandOptions = computed(() => brandsForMainCategory(uploadForm.main_category_id, true));
+const uploadBrandModelOptions = computed(() => brandModelsForBrand(uploadForm.brand_id, true));
+const uploadProductTypeOptions = computed(() => productTypeOptions(uploadForm.main_category_id));
+const editBrandOptions = computed(() => brandsForMainCategory(editForm.main_category_id, true));
+const editBrandModelOptions = computed(() => brandModelsForBrand(editForm.brand_id, true));
+const editProductTypeOptions = computed(() => productTypeOptions(editForm.main_category_id));
+
+function brandsForMainCategory(mainCategoryId: string, includeGeneral: boolean) {
+  const matched = brands.value
+    .filter((brand) =>
+      !mainCategoryId || (Array.isArray(brand.categoryLinks) && brand.categoryLinks.some((link: any) => link.main_category_id === mainCategoryId)),
+    )
+    .map((brand) => ({ value: brand.id, label: brand.name }));
+
+  return includeGeneral
+    ? [{ value: '__NONE__', label: 'No brand (General)' }, ...matched]
+    : matched;
+}
+
+function brandModelsForBrand(brandId: string, includeGeneral: boolean) {
+  const brand = brands.value.find((item) => item.id === brandId);
+  const matched = Array.isArray(brand?.models) ? brand.models.map((model: any) => ({ value: model.id, label: model.name })) : [];
+  return includeGeneral
+    ? [{ value: '__NONE__', label: 'No model (General)' }, ...matched]
+    : matched;
+}
+
+function productTypeOptions(mainCategoryId: string) {
+  return productTypes.value
+    .filter((type) => !mainCategoryId || type.main_category_id === mainCategoryId)
+    .map((type) => ({
+      value: type.id,
+      label: type.mainCategory?.name ? `${type.mainCategory.name} / ${type.name}` : type.name,
+    }));
+}
 
 function formatSize(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;
@@ -421,7 +540,17 @@ async function loadMedia() {
   try {
     const params: any = { page: currentPage.value, limit: 24 };
     if (searchQuery.value) params.search = searchQuery.value;
-    if (selectedCategory.value) params.category = selectedCategory.value;
+    if (selectedMainCategoryId.value) params.main_category_id = selectedMainCategoryId.value;
+    if (selectedBrandId.value) params.brand_id = selectedBrandId.value;
+    if (selectedBrandModelId.value) params.brand_model_id = selectedBrandModelId.value;
+    if (selectedProductTypeId.value === '__GENERAL__') {
+      params.general = '1';
+      params.category = 'general';
+    } else if (selectedProductTypeId.value) {
+      params.product_type_id = selectedProductTypeId.value;
+      const type = productTypes.value.find((item) => item.id === selectedProductTypeId.value);
+      if (type?.slug) params.category = type.slug;
+    }
     
     const response = await axios.get('/api/admin/media', { params });
     
@@ -457,7 +586,10 @@ function handleCategoryChange() {
 
 function clearFilters() {
   searchQuery.value = '';
-  selectedCategory.value = '';
+  selectedMainCategoryId.value = '';
+  selectedBrandId.value = '';
+  selectedBrandModelId.value = '';
+  selectedProductTypeId.value = '';
   currentPage.value = 1;
   loadMedia();
 }
@@ -496,14 +628,41 @@ function handleFileSelect(event: Event) {
 
 async function handleUpload() {
   if (!selectedFile.value || fileError.value) return;
+  if (!uploadForm.main_category_id) {
+    toast.error('Select a main category');
+    return;
+  }
+  if (!uploadForm.product_type_id) {
+    toast.error('Select a product type or General');
+    return;
+  }
+  if (uploadForm.product_type_id !== '__GENERAL__' && uploadForm.brand_id === '__NONE__') {
+    toast.error('Select a brand or choose General');
+    return;
+  }
+  if (uploadForm.product_type_id !== '__GENERAL__' && uploadForm.brand_model_id === '__NONE__') {
+    toast.error('Select a model or choose General');
+    return;
+  }
   
   uploading.value = true;
   try {
     console.log('[MediaPage] Starting upload for file:', selectedFile.value.name);
     const formData = new FormData();
     formData.append('file', selectedFile.value);
-    if (uploadCategory.value) {
-      formData.append('category', uploadCategory.value);
+    formData.append('main_category_id', uploadForm.main_category_id);
+    formData.append('product_type_id', uploadForm.product_type_id);
+    if (uploadForm.product_type_id === '__GENERAL__') {
+      formData.append('category', 'general');
+    } else {
+      const type = productTypes.value.find((item) => item.id === uploadForm.product_type_id);
+      if (type?.slug) formData.append('category', type.slug);
+      if (uploadForm.brand_id !== '__NONE__') {
+        formData.append('brand_id', uploadForm.brand_id);
+      }
+      if (uploadForm.brand_model_id !== '__NONE__') {
+        formData.append('brand_model_id', uploadForm.brand_model_id);
+      }
     }
     if (uploadTags.value) {
       formData.append('tags', uploadTags.value);
@@ -543,7 +702,10 @@ function resetUploadForm() {
   selectedFile.value = null;
   previewUrl.value = '';
   fileError.value = '';
-  uploadCategory.value = '';
+  uploadForm.main_category_id = '';
+  uploadForm.brand_id = '__NONE__';
+  uploadForm.brand_model_id = '__NONE__';
+  uploadForm.product_type_id = '';
   uploadTags.value = '';
   const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
   if (fileInput) fileInput.value = '';
@@ -614,10 +776,13 @@ async function viewMedia(item: any) {
     const title = titleTag ? titleTag.replace('title:', '') : '';
     const otherTags = tags.filter(t => !t.startsWith('title:'));
     
-    editForm.value = {
-      category: editingMedia.value.category || '',
-      tagsText: otherTags.join(', '),
-    };
+    editForm.main_category_id = editingMedia.value.main_category_id || '';
+    editForm.brand_id = editingMedia.value.brand_id || '__NONE__';
+    editForm.brand_model_id = editingMedia.value.brand_model_id || '__NONE__';
+    editForm.product_type_id = editingMedia.value.product_type_id || (editingMedia.value.category === 'general' ? '__GENERAL__' : '');
+    editForm.category = editingMedia.value.category || '';
+    editForm.tagsText = otherTags.join(', ');
+    editForm.title = title;
     
     showEditModal.value = true;
   } catch (error: any) {
@@ -628,18 +793,32 @@ async function viewMedia(item: any) {
 
 async function saveMetadata() {
   if (!editingMedia.value) return;
+  if (!editForm.main_category_id) {
+    toast.error('Select a main category');
+    return;
+  }
+  if (!editForm.product_type_id) {
+    toast.error('Select a product type or General');
+    return;
+  }
   
   savingMetadata.value = true;
   try {
-    const tags = editForm.value.tagsText
+    const tags = editForm.tagsText
       .split(',')
       .map(t => t.trim())
       .filter(t => t.length > 0);
     
     await axios.put(`/api/admin/media/${editingMedia.value.id}`, {
-      category: editForm.value.category || null,
+      main_category_id: editForm.main_category_id,
+      brand_id: editForm.product_type_id === '__GENERAL__' || editForm.brand_id === '__NONE__' ? null : editForm.brand_id,
+      brand_model_id: editForm.product_type_id === '__GENERAL__' || editForm.brand_model_id === '__NONE__' ? null : editForm.brand_model_id,
+      product_type_id: editForm.product_type_id,
+      category: editForm.product_type_id === '__GENERAL__'
+        ? 'general'
+        : (productTypes.value.find((item) => item.id === editForm.product_type_id)?.slug || editForm.category || null),
       tags: tags,
-      title: editForm.value.title || null,
+      title: editForm.title || null,
     });
     
     toast.success('Media metadata updated');
@@ -652,10 +831,12 @@ async function saveMetadata() {
   }
 }
 
-async function loadProductTypes() {
-  loadingProductTypes.value = true;
+async function loadTaxonomy() {
+  loadingTaxonomy.value = true;
   try {
     const response = await axios.get('/api/admin/taxonomy');
+    mainCategories.value = Array.isArray(response.data?.mainCategories) ? response.data.mainCategories : [];
+    brands.value = Array.isArray(response.data?.brands) ? response.data.brands : [];
     productTypes.value = Array.isArray(response.data?.productTypes) ? response.data.productTypes : [];
     if (productTypes.value.length === 0) {
       console.warn('[MediaPage] No product types found in database');
@@ -664,15 +845,61 @@ async function loadProductTypes() {
     console.error('[MediaPage] Failed to load product types', error);
     console.error('[MediaPage] Error details:', error.response?.data || error.message);
     toast.error('Failed to load product types: ' + (error.response?.data?.error || error.message));
+    mainCategories.value = [];
+    brands.value = [];
     productTypes.value = [];
   } finally {
-    loadingProductTypes.value = false;
+    loadingTaxonomy.value = false;
   }
 }
 
+watch(selectedMainCategoryId, () => {
+  selectedBrandId.value = '';
+  selectedBrandModelId.value = '';
+  selectedProductTypeId.value = '';
+});
+
+watch(selectedBrandId, () => {
+  selectedBrandModelId.value = '';
+});
+
+watch(() => uploadForm.main_category_id, () => {
+  uploadForm.brand_id = '__NONE__';
+  uploadForm.brand_model_id = '__NONE__';
+  uploadForm.product_type_id = '';
+});
+
+watch(() => uploadForm.brand_id, () => {
+  uploadForm.brand_model_id = '__NONE__';
+});
+
+watch(() => uploadForm.product_type_id, (value) => {
+  if (value === '__GENERAL__') {
+    uploadForm.brand_id = '__NONE__';
+    uploadForm.brand_model_id = '__NONE__';
+  }
+});
+
+watch(() => editForm.main_category_id, () => {
+  editForm.brand_id = '__NONE__';
+  editForm.brand_model_id = '__NONE__';
+  editForm.product_type_id = '';
+});
+
+watch(() => editForm.brand_id, () => {
+  editForm.brand_model_id = '__NONE__';
+});
+
+watch(() => editForm.product_type_id, (value) => {
+  if (value === '__GENERAL__') {
+    editForm.brand_id = '__NONE__';
+    editForm.brand_model_id = '__NONE__';
+  }
+});
+
 onMounted(() => {
   loadMedia();
-  loadProductTypes();
+  loadTaxonomy();
 });
 </script>
 

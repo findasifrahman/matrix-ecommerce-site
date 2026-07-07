@@ -418,7 +418,7 @@
           <div class="flex flex-wrap items-center justify-between gap-3">
             <div>
               <h4 class="text-base font-semibold text-slate-900">Media library</h4>
-              <p class="text-xs text-slate-500">Only the current product type media is loaded. Search by name when you need a wider match.</p>
+              <p class="text-xs text-slate-500">Media loads by the current main category, brand, model, and product type. Switch to General when you need shared images.</p>
             </div>
             <div class="flex flex-wrap gap-2">
               <Button variant="ghost" size="sm" type="button" @click="router.push('/admin/media')">Media page</Button>
@@ -448,7 +448,7 @@
               <span class="text-xs text-slate-500">{{ productMediaFiles.length }} file(s) selected</span>
             </div>
             <p class="mt-2 text-[11px] text-slate-500">
-              Uploads from this form are tagged to the selected product type so they stay easier to find later.
+              Uploads from this form are tagged to the current taxonomy path, or to General when you choose the shared-media option.
             </p>
             <input ref="productMediaInput" type="file" accept="image/*,video/*" multiple class="hidden" @change="onProductMediaPick" />
             <div v-if="productMediaFiles.length > 0" class="mt-2 flex flex-wrap gap-2">
@@ -871,17 +871,12 @@ const selectedProductType = computed(() => taxonomy.productTypes.find((item) => 
 const mediaCategoryOptions = computed(() => [
   {
     value: '__AUTO__',
-    label: selectedProductType.value?.slug
-      ? `Use selected product type (${selectedProductType.value.name})`
-      : 'Use selected product type',
+    label: selectedProductType.value?.name
+      ? `Use current taxonomy (${selectedProductType.value.name})`
+      : 'Use current taxonomy',
   },
-  { value: '', label: 'All product types' },
-  ...taxonomy.productTypes
-    .filter((type) => !productForm.main_category_id || type.main_category_id === productForm.main_category_id)
-    .map((type) => ({
-      value: type.slug,
-      label: type.mainCategory?.name ? `${type.mainCategory.name} / ${type.name}` : type.name,
-    })),
+  { value: '__GENERAL__', label: 'General media for this main category' },
+  { value: '', label: 'All media' },
 ]);
 
 const normalizedDetailPointPreview = computed(() =>
@@ -1052,11 +1047,30 @@ function findKnownMediaAsset(assetId: string) {
   return mediaAssets.value.find((asset) => asset.id === assetId) || knownMediaAssets.value[assetId] || null;
 }
 
-function resolveMediaCategoryFilter() {
-  if (mediaCategoryFilter.value === '__AUTO__') {
-    return selectedProductType.value?.slug || selectedMainCategory.value?.slug || undefined;
+function resolveMediaLibraryParams() {
+  if (mediaCategoryFilter.value === '') {
+    return {
+      search: mediaSearchQuery.value.trim() || undefined,
+    };
   }
-  return mediaCategoryFilter.value || undefined;
+
+  if (mediaCategoryFilter.value === '__GENERAL__') {
+    return {
+      search: mediaSearchQuery.value.trim() || undefined,
+      main_category_id: productForm.main_category_id || undefined,
+      general: '1',
+      category: 'general',
+    };
+  }
+
+  return {
+    search: mediaSearchQuery.value.trim() || undefined,
+    main_category_id: productForm.main_category_id || undefined,
+    brand_id: productForm.brand_id || undefined,
+    brand_model_id: productForm.brand_model_id || undefined,
+    product_type_id: productForm.product_type_id || undefined,
+    category: selectedProductType.value?.slug || undefined,
+  };
 }
 
 async function loadMediaAssetById(assetId: string) {
@@ -1163,8 +1177,7 @@ async function loadMediaAssets() {
       params: {
         page: 1,
         limit: 48,
-        search: mediaSearchQuery.value.trim() || undefined,
-        category: resolveMediaCategoryFilter(),
+        ...resolveMediaLibraryParams(),
       },
     });
     mediaAssets.value = response.data?.media || [];
@@ -1189,9 +1202,27 @@ async function uploadProductMedia() {
     for (const file of productMediaFiles.value) {
       const formData = new FormData();
       formData.append('file', file);
-      const mediaCategory = resolveMediaCategoryFilter();
-      if (mediaCategory) {
-        formData.append('category', mediaCategory);
+      if (!productForm.main_category_id) {
+        throw new Error('Select a main category before uploading media');
+      }
+      formData.append('main_category_id', productForm.main_category_id);
+      if (mediaCategoryFilter.value === '__GENERAL__') {
+        formData.append('product_type_id', '__GENERAL__');
+        formData.append('category', 'general');
+      } else {
+        if (!productForm.product_type_id) {
+          throw new Error('Select a product type before uploading media');
+        }
+        formData.append('product_type_id', productForm.product_type_id);
+        if (selectedProductType.value?.slug) {
+          formData.append('category', selectedProductType.value.slug);
+        }
+        if (productForm.brand_id) {
+          formData.append('brand_id', productForm.brand_id);
+        }
+        if (productForm.brand_model_id) {
+          formData.append('brand_model_id', productForm.brand_model_id);
+        }
       }
       formData.append('title', file.name.replace(/\.[^.]+$/, ''));
       await axios.post('/api/admin/media/upload', formData);
