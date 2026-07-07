@@ -393,7 +393,7 @@ async function loadHomepageCollections() {
           key: String(section.key || `section-${index}`),
           label: String(section.label || section.title || 'Collection'),
           title: String(section.title || section.label || 'Collection'),
-          imageUrl: section.imageUrl || undefined,
+          imageUrl: menuImage(section.label || section.title || 'Collection'),
           imageAlt: section.imageAlt || section.title || section.label || 'Collection',
           searchKeyword: section.searchKeyword || section.title || section.label || '',
           items: Array.isArray(section.items) ? section.items : [],

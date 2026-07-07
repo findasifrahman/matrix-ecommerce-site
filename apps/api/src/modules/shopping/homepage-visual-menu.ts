@@ -20,7 +20,7 @@ function placeholderImage(label: string): string {
   return `https://placehold.co/600x450/f8fafc/0f172a?text=${encodeURIComponent(label)}`;
 }
 
-const PHONE_COVER_IMAGE = 'https://cbu01.alicdn.com/img/ibank/O1CN01qKi0sm2A8QFIA4KyN_!!2221515018158-0-cib.jpg';
+const PHONE_COVER_IMAGE = '/menu_round_icons/charger.png';
 const CHARGER_IMAGE = 'https://cbu01.alicdn.com/img/ibank/O1CN01rMc9TR1uqol85owES_!!1627406089-0-cib.jpg';
 const PHONE_GLASS_IMAGE = 'https://cbu01.alicdn.com/img/ibank/O1CN01kc2INO1ocituoDdXA_!!1865165246-0-cib.jpg';
 const POWER_BANK_IMAGE = 'https://cbu01.alicdn.com/img/ibank/O1CN01UN76QO2GOo6gcHTlZ_!!2210980869006-0-cib.jpg';
