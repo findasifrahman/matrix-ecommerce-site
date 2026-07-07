@@ -168,9 +168,9 @@
         <div class="flex items-center justify-between gap-3">
           <div>
             <p class="text-[10px] font-bold uppercase tracking-[0.3em] text-slate-400">Hot products</p>
-            <h2 class="mt-1 text-xl font-black tracking-tight text-slate-950">Popular from real searches</h2>
+            <h2 class="mt-1 text-xl font-black tracking-tight text-slate-950">Popular </h2>
             <p v-if="hotProductKeywords.length > 0" class="mt-1 text-xs text-slate-500">
-              Based on recent searches: {{ hotProductKeywords.slice(0, 4).join(', ') }}
+              Everyone wants to buy {{ hotProductKeywords.join(', ') }} and more.
             </p>
           </div>
           <Button variant="ghost" size="sm" @click="openBrowse">Browse more</Button>
