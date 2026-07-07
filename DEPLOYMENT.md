@@ -1,86 +1,105 @@
 # Matrix Ecommerce Deployment
 
-This repo is a pnpm monorepo:
+This repo is a pnpm workspace monorepo:
 
 - Backend: `apps/api`
 - Frontend: `apps/web`
 
-Use Railway for the backend and Vercel for the frontend.
+Both services can be deployed on Railway from the same GitHub repo.
 
-## Important fix already applied
+## Recommended Railway model
 
-Railway was failing because startup ran:
+This repo is a shared monorepo, so both services should stay connected to the repo root and use separate Railway service configs.
 
-- `pnpm db:patch:prod`
+Use these config files:
 
-That command assumes old legacy tables already exist. On a fresh Railway database, it crashes with:
+- [apps/api/railway.json](/C:/Users/asif/Desktop/matrix_ecommerce/apps/api/railway.json)
+- [apps/web/railway.json](/C:/Users/asif/Desktop/matrix_ecommerce/apps/web/railway.json)
 
-- `P1014 The underlying table for model cart_items does not exist`
+Do not use a root-level `railway.json` or `railway.toml` for this setup. A repo-level Railway config overrides dashboard build and deploy settings, which causes both services to inherit the same commands.
 
-The deploy config now uses:
+## Important backend boot fix
 
-- `pnpm --filter @matrix-ecommerce/api start:railway`
-
-And that runs:
-
-- `pnpm db:push`
-- `pnpm start`
-
-So Railway now syncs the current Prisma schema directly instead of replaying old patch scripts.
-
-## Backend on Railway
-
-### 1. Create the Railway service
-
-Create one Railway project for the API and attach a PostgreSQL database.
-
-Point the service at the repository root, not `apps/api`.
-
-Railway will read:
-
-- [railway.json](/C:/Users/asif/Desktop/matrix_ecommerce/railway.json)
-
-### 2. Railway build and start commands
-
-These are already defined in `railway.json`:
-
-Build:
+The old startup path used:
 
 ```bash
-pnpm install --frozen-lockfile && pnpm --filter @matrix-ecommerce/api db:generate && pnpm --filter @matrix-ecommerce/api build
+pnpm db:patch:prod
 ```
 
-Start:
+That path is not safe for a fresh Railway PostgreSQL database. It can fail with Prisma `P1014` because it assumes older tables already exist.
+
+The backend Railway service now uses:
 
 ```bash
 pnpm --filter @matrix-ecommerce/api start:railway
 ```
 
-### 3. Railway backend environment variables
+That script runs:
+
+```bash
+pnpm db:push:deploy
+pnpm start
+```
+
+So the current schema is pushed directly on deploy.
+
+## Railway project structure
+
+Create one Railway project with:
+
+1. A `backend` service
+2. A `frontend` service
+3. A PostgreSQL service
+
+Both app services should point to the same GitHub repo.
+
+## Backend service setup
+
+### Service settings
+
+Use these values in Railway:
+
+- Root Directory: `/`
+- Config as Code file path: `/apps/api/railway.json`
+- Public Networking: enabled
+
+Backend build command from config:
+
+```bash
+pnpm install --frozen-lockfile && pnpm --filter @matrix-ecommerce/api db:generate && pnpm --filter @matrix-ecommerce/api build
+```
+
+Backend start command from config:
+
+```bash
+pnpm --filter @matrix-ecommerce/api start:railway
+```
+
+### Backend environment variables
 
 Use [apps/api/.env.example](/C:/Users/asif/Desktop/matrix_ecommerce/apps/api/.env.example) as the template.
 
-Minimum required:
+Minimum recommended production variables:
 
 ```env
 DATABASE_URL=postgresql://...
 NODE_ENV=production
-APP_BASE_URL=https://your-frontend-domain.vercel.app
-WEB_APP_URL=https://your-frontend-domain.vercel.app
-API_BASE_URL=https://your-backend-domain.up.railway.app
-ALLOWED_ORIGINS=https://your-frontend-domain.vercel.app,https://www.yourdomain.com
-JWT_ACCESS_SECRET=long-random-secret
-JWT_REFRESH_SECRET=another-long-random-secret
+APP_BASE_URL=https://your-frontend-service.up.railway.app
+WEB_APP_URL=https://your-frontend-service.up.railway.app
+API_BASE_URL=https://your-backend-service.up.railway.app
+ALLOWED_ORIGINS=https://your-frontend-service.up.railway.app
+JWT_ACCESS_SECRET=replace-with-a-long-random-secret
+JWT_REFRESH_SECRET=replace-with-a-second-long-random-secret
 JWT_ACCESS_EXPIRES=12h
 JWT_REFRESH_EXPIRES=14d
 ```
 
-Recommended optional variables:
+Optional variables only if you use those features:
 
 ```env
 GOOGLE_CLIENT_ID=
 GOOGLE_CLIENT_SECRET=
-GOOGLE_REDIRECT_URI=https://your-backend-domain.up.railway.app/api/auth/google/callback
+GOOGLE_REDIRECT_URI=https://your-backend-service.up.railway.app/api/auth/google/callback
 
 SMTP_HOST=
 SMTP_PORT=587
@@ -100,73 +119,60 @@ SMS_BD_TIMEOUT_MS=10000
 WECOM_GROUP_BOT_WEBHOOK_URL=
 ```
 
-### 4. Railway database initialization
+### Backend database notes
 
-On deploy, the backend start command runs:
+Railway will inject `DATABASE_URL` if you connect the PostgreSQL service reference correctly.
+
+The backend start script already runs:
 
 ```bash
 pnpm --filter @matrix-ecommerce/api db:push:deploy
 ```
 
-through `start:railway`, which keeps the database schema synced to the current Prisma schema.
-
-If you want seed data once, run this manually in Railway shell:
+If you want seed data once, run this manually in the backend Railway shell:
 
 ```bash
 pnpm --filter @matrix-ecommerce/api db:seed
 ```
 
-Do not run `db:migrate` in production here. In this repo it uses `--force-reset`, which will wipe the database.
+Do not run this in production:
 
-### 5. Railway public URL
-
-After Railway deploys, copy the public domain, for example:
-
-```text
-https://matrix-ecommerce-api.up.railway.app
+```bash
+pnpm --filter @matrix-ecommerce/api db:migrate
 ```
 
-Use that exact backend base URL in:
+That script uses `--force-reset`.
 
-- `API_BASE_URL` on Railway
-- `VITE_API_URL` on Vercel
+## Frontend service setup
 
-## Frontend on Vercel
+### Service settings
 
-### 1. Vercel project root
+Use these values in Railway:
 
-Set the Vercel project root to the repository root:
+- Root Directory: `/`
+- Config as Code file path: `/apps/web/railway.json`
+- Public Networking: enabled
 
-```text
-.
+Frontend build command from config:
+
+```bash
+pnpm install --frozen-lockfile && pnpm --filter @matrix-ecommerce/web build
 ```
 
-This is important.
+Frontend start command from config:
 
-If you set the Vercel root to `apps/web`, Vercel often loses the workspace context and the configured output path no longer matches the monorepo build.
+```bash
+bash apps/web/start.sh
+```
 
-### 2. Vercel config
-
-Vercel uses:
-
-- [vercel.json](/C:/Users/asif/Desktop/matrix_ecommerce/vercel.json)
-
-Current settings:
-
-- install command: `pnpm install --frozen-lockfile`
-- build command: `pnpm build:web`
-- output directory: `apps/web/dist`
-
-If Vercel says it cannot find `dist`, the usual cause is that the project root is wrong in the Vercel dashboard.
-
-### 3. Frontend environment variables
+### Frontend environment variables
 
 Use [apps/web/.env.example](/C:/Users/asif/Desktop/matrix_ecommerce/apps/web/.env.example).
 
 Required:
 
 ```env
-VITE_API_URL=https://your-backend-domain.up.railway.app
+VITE_API_URL=https://your-backend-service.up.railway.app
 ```
 
 Optional:
@@ -178,63 +184,62 @@ VITE_TURNSTILE_SITE_KEY=
 Notes:
 
 - `VITE_API_URL` should be the backend base URL.
-- Do not add `/api` at the end unless you intentionally want it. The app already appends API paths.
+- The frontend already normalizes a trailing `/api`, so the plain domain is cleaner.
 
-Good:
+## Recommended Railway dashboard setup
 
-```env
-VITE_API_URL=https://matrix-ecommerce-api.up.railway.app
-```
+For both services:
 
-Also acceptable:
+1. Connect the same GitHub repo.
+2. Keep Root Directory as `/`.
+3. Set the Config as Code file path to the service-specific file.
+4. Generate a public domain for each service.
+5. Leave restart policy as `ON_FAILURE`.
 
-```env
-VITE_API_URL=https://matrix-ecommerce-api.up.railway.app/api
-```
+Helpful watch paths:
 
-The frontend strips a trailing `/api`, but the cleaner value is the plain domain.
+- Backend: `/apps/api/**` and `/packages/**`
+- Frontend: `/apps/web/**` and `/packages/**`
 
-## Suggested deployment order
+## Deployment order
 
-### 1. Deploy backend first on Railway
+### 1. Deploy the backend service first
 
-Set all backend env vars, deploy, then confirm:
+After deploy, test:
 
 ```text
-GET https://your-backend-domain.up.railway.app/health
+https://your-backend-service.up.railway.app/health
 ```
 
-It should return status JSON.
-
-### 2. Deploy frontend on Vercel
+### 2. Put the backend public URL into the frontend service
 
 Set:
 
 ```env
-VITE_API_URL=https://your-backend-domain.up.railway.app
+VITE_API_URL=https://your-backend-service.up.railway.app
 ```
 
-Then redeploy.
+Then redeploy the frontend.
 
-### 3. Update backend CORS/auth URLs
+### 3. Put the frontend public URL back into the backend service
 
-Once Vercel gives the final frontend URL, make sure Railway has:
+Update:
 
 ```env
-APP_BASE_URL=https://your-frontend-domain.vercel.app
-WEB_APP_URL=https://your-frontend-domain.vercel.app
-ALLOWED_ORIGINS=https://your-frontend-domain.vercel.app,https://www.yourdomain.com
+APP_BASE_URL=https://your-frontend-service.up.railway.app
+WEB_APP_URL=https://your-frontend-service.up.railway.app
+ALLOWED_ORIGINS=https://your-frontend-service.up.railway.app
 ```
 
-Then redeploy Railway once more.
+Then redeploy the backend again.
 
 ## Production safety notes
 
-- `db:migrate` in this repo is destructive for dev resets. Do not use it on Railway production.
-- `db:patch:prod` is for legacy incremental patching and should not be used for a fresh Railway deployment.
-- `db:push` is the correct deploy path for the current matrix-ecommerce schema on a fresh hosted database.
+- `db:patch:prod` is a legacy patch chain and should not be your Railway boot path on a fresh database.
+- `db:migrate` is destructive in this repo and should not be used on production Railway.
+- `db:push:deploy` is the correct bootstrapping path for the current backend.
 
-## Commands you can run locally to verify
+## Local verification commands
 
 Backend Prisma client:
 
@@ -262,4 +267,4 @@ pnpm build
 
 ## Security note
 
-Your local `apps/api/.env` currently contains real-looking secrets. Rotate them before public deployment and do not copy that file directly into Railway.
+Your local API env file may contain real secrets. Do not paste that file directly into Railway. Create fresh production secrets instead.

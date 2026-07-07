@@ -101,7 +101,7 @@
               </div>
             </section>
 
-            <!--
+            
             <section class="rounded-[28px] border border-slate-200 bg-[linear-gradient(90deg,#effdf7,#fff7e5)] p-5 shadow-[0_16px_38px_rgba(15,23,42,0.04)]">
               <div class="flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.28em] text-slate-800">
                 <Truck class="h-4 w-4 text-teal-600" />
@@ -110,14 +110,14 @@
               <div class="mt-4 grid gap-3 md:grid-cols-2">
                 <div class="rounded-full bg-white/85 px-4 py-3 text-sm text-slate-700">
                   <span class="font-semibold text-slate-900">Ship from:</span>
-                  {{ sellerLocation }}
+                  Dhaka, Bangladesh
                 </div>
                 <div class="rounded-full bg-white/85 px-4 py-3 text-sm text-slate-700">
-                  Final local delivery charge is confirmed during checkout.
+                  Shipped from Pathao, Redex courier
                 </div>
               </div>
             </section>
-          -->
+          
           </div>
 
           <aside class="space-y-4 self-start 2xl:sticky 2xl:top-4">
