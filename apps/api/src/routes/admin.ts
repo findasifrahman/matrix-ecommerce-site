@@ -188,13 +188,22 @@ async function getDefaultSellerAndCategory() {
 
 export default async function adminRoutes(fastify: FastifyInstance) {
   fastify.get('/dashboard', { preHandler: auth }, async () => {
-    const [users, products, orders, pendingProofs, pendingSellerItems, approvedSellerItems, recentOrders, weeklySales, monthlySales] = await Promise.all([
+    const startOfMonth = new Date();
+    startOfMonth.setDate(1);
+    startOfMonth.setHours(0, 0, 0, 0);
+    const completedStatuses = ['received', 'completed'];
+    const closedStatuses = [...completedStatuses, 'cancelled'];
+
+    const [users, products, orders, soldThisMonth, completedOrders, pendingOrders, recentOrders, weeklySales, monthlySales] = await Promise.all([
       prisma.user.count(),
       prisma.product.count(),
       prisma.order.count(),
-      prisma.paymentProof.count({ where: { status: 'submitted' } }),
-      prisma.orderItem.count({ where: { seller_status: 'pending_review' } }),
-      prisma.orderItem.count({ where: { seller_status: 'approved' } }),
+      prisma.order.aggregate({
+        where: { created_at: { gte: startOfMonth }, status: { not: 'cancelled' } },
+        _sum: { total: true },
+      }),
+      prisma.order.count({ where: { status: { in: completedStatuses } } }),
+      prisma.order.count({ where: { status: { notIn: closedStatuses } } }),
       prisma.order.findMany({
         take: 5,
         orderBy: { created_at: 'desc' },
@@ -236,9 +245,9 @@ export default async function adminRoutes(fastify: FastifyInstance) {
       users,
       products,
       orders,
-      pendingProofs,
-      pendingSellerItems,
-      approvedSellerItems,
+      soldThisMonth: soldThisMonth._sum.total || 0,
+      completedOrders,
+      pendingOrders,
       recentOrders,
       weeklySales,
       monthlySales,
@@ -1209,7 +1218,13 @@ export default async function adminRoutes(fastify: FastifyInstance) {
     const completedStatuses = ['received', 'completed'];
     const closedStatuses = [...completedStatuses, 'cancelled'];
 
-    const where: any = {};
+    const where: any = {
+      roles: {
+        some: {
+          role: { name: 'CUSTOMER' },
+        },
+      },
+    };
     if (search) {
       where.OR = [
         { email: { contains: search, mode: 'insensitive' } },

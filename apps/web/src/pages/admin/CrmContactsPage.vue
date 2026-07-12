@@ -8,9 +8,15 @@
     <Card>
       <CardBody class="space-y-3">
         <div class="flex flex-wrap items-end gap-3">
-          <Input v-model="filters.search" class="w-64" label="Search" placeholder="Search name, phone, email" @input="onFilterChange" />
-          <Select v-model="filters.audience" class="w-56" label="Audience" :options="audienceOptions" @update:modelValue="onFilterChange" />
-          <Select v-model.number="limit" class="w-28" label="Show" :options="limitOptions" @update:modelValue="onLimitChange" />
+          <div class="w-full sm:w-64">
+            <Input v-model="filters.search" label="Search" placeholder="Search name, phone, email" @input="onFilterChange" />
+          </div>
+          <div class="w-full sm:w-56">
+            <Select v-model="filters.audience" label="Audience" :options="audienceOptions" @update:modelValue="onFilterChange" />
+          </div>
+          <div class="w-28">
+            <Select v-model.number="limit" label="Show" :options="limitOptions" @update:modelValue="onLimitChange" />
+          </div>
           <Button variant="ghost" size="sm" :loading="loading" @click="loadContacts">
             <RefreshCw class="mr-2 h-4 w-4" :class="{ 'animate-spin': loading }" />
             Refresh
