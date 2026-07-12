@@ -1194,6 +1194,118 @@ export default async function adminRoutes(fastify: FastifyInstance) {
     };
   });
 
+  fastify.get('/crm/contacts', { preHandler: auth }, async (request: FastifyRequest) => {
+    const query = request.query as {
+      page?: string;
+      limit?: string;
+      search?: string;
+      audience?: string;
+    };
+
+    const page = Math.max(1, parseInt(query.page || '1', 10));
+    const limit = Math.max(1, Math.min(100, parseInt(query.limit || '10', 10)));
+    const search = query.search?.trim();
+    const audience = query.audience?.trim();
+    const completedStatuses = ['received', 'completed'];
+    const closedStatuses = [...completedStatuses, 'cancelled'];
+
+    const where: any = {};
+    if (search) {
+      where.OR = [
+        { email: { contains: search, mode: 'insensitive' } },
+        { phone: { contains: search, mode: 'insensitive' } },
+        { customerProfile: { full_name: { contains: search, mode: 'insensitive' } } },
+      ];
+    }
+
+    if (audience === 'placed-order') {
+      where.orders = { some: {} };
+    } else if (audience === 'remaining-order') {
+      where.orders = { some: { status: { notIn: closedStatuses } } };
+    } else if (audience === 'completed-order') {
+      where.orders = { some: { status: { in: completedStatuses } } };
+    } else if (audience === 'cancelled-order') {
+      where.orders = { some: { status: 'cancelled' } };
+    } else if (audience === 'created-account') {
+      where.orders = { none: {} };
+    }
+
+    const [total, users] = await Promise.all([
+      prisma.user.count({ where }),
+      prisma.user.findMany({
+        where,
+        include: {
+          customerProfile: true,
+        },
+        orderBy: { created_at: 'desc' },
+        skip: (page - 1) * limit,
+        take: limit,
+      }),
+    ]);
+
+    const userIds = users.map((user) => user.id);
+    const orders = userIds.length
+      ? await prisma.order.findMany({
+          where: { user_id: { in: userIds } },
+          select: {
+            user_id: true,
+            status: true,
+            total: true,
+            _count: { select: { items: true } },
+          },
+        })
+      : [];
+    const ordersByUser = new Map<string, typeof orders>();
+    for (const order of orders) {
+      if (!ordersByUser.has(order.user_id)) ordersByUser.set(order.user_id, []);
+      ordersByUser.get(order.user_id)!.push(order);
+    }
+
+    const contacts = users.map((user) => {
+      const userOrders = ordersByUser.get(user.id) || [];
+      const placedOrders = userOrders.length;
+      const completedOrders = userOrders.filter((order) => completedStatuses.includes(order.status)).length;
+      const cancelledOrders = userOrders.filter((order) => order.status === 'cancelled').length;
+      const remainingOrders = userOrders.filter((order) => !closedStatuses.includes(order.status)).length;
+      const itemCount = userOrders.reduce((sum, order) => sum + (order._count?.items || 0), 0);
+      const ltv = userOrders
+        .filter((order) => order.status !== 'cancelled')
+        .reduce((sum, order) => sum + Number(order.total || 0), 0);
+      const audiences = ['created-account'];
+      if (placedOrders > 0) audiences.push('placed-order');
+      if (remainingOrders > 0) audiences.push('remaining-order');
+      if (completedOrders > 0) audiences.push('completed-order');
+      if (cancelledOrders > 0) audiences.push('cancelled-order');
+
+      return {
+        id: user.id,
+        name: user.customerProfile?.full_name || user.email || user.phone || 'Contact',
+        phone: user.phone,
+        email: user.email,
+        status: user.status,
+        created_at: user.created_at,
+        preferred_currency: user.customerProfile?.preferred_currency || 'BDT',
+        audiences,
+        order_summary: {
+          placed: placedOrders,
+          remaining: remainingOrders,
+          completed: completedOrders,
+          cancelled: cancelledOrders,
+          items: itemCount,
+        },
+        ltv,
+      };
+    });
+
+    return {
+      contacts,
+      page,
+      limit,
+      total,
+      totalPages: Math.max(1, Math.ceil(total / limit)),
+    };
+  });
+
   fastify.get('/customers/:id', { preHandler: auth }, async (request: FastifyRequest, reply: FastifyReply) => {
     const { id } = request.params as { id: string };
     const customer = await prisma.user.findUnique({

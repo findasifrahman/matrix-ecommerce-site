@@ -1,7 +1,7 @@
 <template>
   <div class="space-y-6">
     <div class="flex items-center justify-between gap-4">
-      <PageHeader title="Admin Dashboard" subtitle="Shopping orders, payment proofs, products, and seller approvals" />
+      <PageHeader title="Admin Dashboard" subtitle="Shopping orders, payment proofs, products" />
       <Button variant="ghost" size="sm" @click="loadDashboard" :loading="loading">
         <RefreshCw class="h-4 w-4 mr-2" :class="{ 'animate-spin': loading }" />
         Refresh
@@ -26,7 +26,7 @@
       <Card>
         <CardHeader>
           <div class="flex items-center justify-between">
-            <h3 class="text-lg font-semibold">Recent Orders</h3>
+            <h3 class="text-lg font-semibold" style="color: brown;">Recent Orders</h3>
             <Button variant="ghost" size="sm" @click="$router.push('/admin/orders')">View all</Button>
           </div>
         </CardHeader>

@@ -14,7 +14,7 @@
             <div
               :key="`hero-desktop-${activeHeroIndex}`"
               class="absolute inset-y-0 right-0 hidden w-[54%] bg-cover bg-center lg:block"
-              :style="{ backgroundImage: `linear-gradient(90deg, rgba(223,232,226,0.98) 0%, rgba(223,232,226,0.70) 22%, rgba(223,232,226,0.08) 58%), url('${activeHeroImage}')` }"
+              :style="{ backgroundImage: `linear-gradient(90deg, rgba(223,232,226,0.45) 0%, rgba(223,232,226,0.20) 22%, rgba(223,232,226,0) 58%), url('${activeHeroImage}')` }"
             />
           </Transition>
           <div class="absolute inset-0 bg-[radial-gradient(circle_at_18%_18%,rgba(255,255,255,0.88),transparent_34%),linear-gradient(110deg,rgba(255,255,255,0.82),rgba(255,255,255,0.38)_68%)] lg:bg-[radial-gradient(circle_at_18%_18%,rgba(255,255,255,0.85),transparent_34%),linear-gradient(110deg,rgba(255,255,255,0.72),rgba(255,255,255,0)_68%)]" />
@@ -35,7 +35,7 @@
 
               <div class="rounded-[28px] border border-white/80 bg-white/86 p-4 shadow-[0_16px_36px_rgba(15,23,42,0.08)] backdrop-blur lg:max-w-3xl">
                 <div class="flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
-                  <p class="text-[10px] font-bold uppercase tracking-[0.28em] text-slate-400">Find Accessories By Phone</p>
+                  <p class="text-[10px] font-bold uppercase tracking-[0.28em] text-slate-400">Find Accessories By Brand</p>
                   <Button type="button" variant="ghost" class="h-10 rounded-full px-4 text-xs font-semibold uppercase tracking-[0.12em]" @click="openBrowse">
                     Browse all
                   </Button>

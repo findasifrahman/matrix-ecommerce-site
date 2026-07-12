@@ -238,6 +238,15 @@ const router = createRouter({
           component: () => import('@/pages/admin/UsersPage.vue'),
         },
         {
+          path: 'crm',
+          redirect: '/admin/crm/contacts',
+        },
+        {
+          path: 'crm/contacts',
+          name: 'admin-crm-contacts',
+          component: () => import('@/pages/admin/CrmContactsPage.vue'),
+        },
+        {
           path: 'sellers',
           name: 'admin-sellers',
           component: () => import('@/pages/admin/SellersPage.vue'),

@@ -45,6 +45,19 @@
           </svg>
           <span>Potential Lead</span>
         </router-link>
+        <div class="pt-2">
+          <div class="px-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">CRM</div>
+          <router-link
+            to="/admin/crm/contacts"
+            class="mt-1 flex items-center space-x-3 rounded-lg px-3 py-2 text-slate-700 transition-colors hover:bg-slate-100"
+            active-class="bg-teal-100 text-teal-700 font-semibold border-l-4 border-teal-600 shadow-sm"
+          >
+            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a4 4 0 00-4-4h-1M9 20H4v-2a4 4 0 014-4h1m0-4a4 4 0 118 0 4 4 0 01-8 0z" />
+            </svg>
+            <span>Contacts</span>
+          </router-link>
+        </div>
         <router-link
           to="/admin/shopping"
           class="flex items-center space-x-3 px-3 py-2 rounded-lg text-slate-700 hover:bg-slate-100 transition-colors"
