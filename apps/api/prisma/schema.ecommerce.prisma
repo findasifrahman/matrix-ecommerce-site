@@ -613,6 +613,7 @@ model Order {
   coupon_code         String?
   coupon_id           String?
   shipping_fee        Float              @default(0)
+  estimated_weight_kg Float?
   payment_method      String             @default("cash_on_delivery")
   total               Float
   shipping_method     String             @default("air")

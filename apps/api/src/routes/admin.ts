@@ -501,6 +501,153 @@ export default async function adminRoutes(fastify: FastifyInstance) {
     return updated;
   });
 
+  fastify.patch('/orders/:id', { preHandler: auth }, async (request: FastifyRequest, reply: FastifyReply) => {
+    const { id } = request.params as { id: string };
+    const body = z.object({
+      customer: z.object({
+        phone: z.string().trim().min(5).max(40),
+        email: z.string().trim().email().nullable().optional(),
+      }),
+      shipping: z.object({
+        name: z.string().trim().min(1).max(160),
+        phone: z.string().trim().min(5).max(40),
+        address_line: z.string().trim().min(3).max(1000),
+        city: z.string().trim().min(1).max(160),
+        postal_code: z.string().trim().max(40).nullable().optional(),
+        country: z.string().trim().min(1).max(120).default('Bangladesh'),
+      }),
+      notes: z.string().trim().max(2000).nullable().optional(),
+      shipping_fee: z.number().min(0),
+      estimated_weight_kg: z.number().min(0),
+      items: z.array(z.object({
+        id: z.string().uuid().optional(),
+        product_id: z.string().uuid(),
+        qty: z.number().int().min(1).max(9999),
+        price: z.number().min(0),
+      })).min(1),
+    }).parse(request.body);
+
+    const order = await prisma.order.findUnique({
+      where: { id },
+      include: { items: true },
+    });
+    if (!order) return reply.status(404).send({ error: 'Order not found' });
+
+    const productIds = Array.from(new Set(body.items.map((item) => item.product_id)));
+    const products = await prisma.product.findMany({
+      where: { id: { in: productIds } },
+      include: {
+        seller: { include: { sellerProfile: true } },
+        coverAsset: true,
+        orderItems: {
+          where: { image_url_snapshot: { not: null } },
+          orderBy: { created_at: 'desc' },
+          take: 1,
+        },
+        cartItems: {
+          where: { image_url_snapshot: { not: null } },
+          orderBy: { created_at: 'desc' },
+          take: 1,
+        },
+      },
+    });
+    if (products.length !== productIds.length) {
+      return reply.status(400).send({ error: 'One or more selected products no longer exist' });
+    }
+    const galleryAssetIds = Array.from(new Set(products.flatMap((product: any) => Array.isArray(product.gallery_asset_ids) ? product.gallery_asset_ids : [])));
+    const galleryAssets = galleryAssetIds.length
+      ? await prisma.mediaAsset.findMany({ where: { id: { in: galleryAssetIds } } })
+      : [];
+    const galleryAssetById = new Map(galleryAssets.map((asset) => [asset.id, asset]));
+    const productImageUrl = (product: any) => {
+      const galleryIds = Array.isArray(product.gallery_asset_ids) ? product.gallery_asset_ids : [];
+      const galleryAsset = galleryIds.map((assetId: string) => galleryAssetById.get(assetId)).find(Boolean);
+      return product.coverAsset?.thumbnail_url
+        || product.coverAsset?.public_url
+        || product.orderItems?.[0]?.image_url_snapshot
+        || product.cartItems?.[0]?.image_url_snapshot
+        || galleryAsset?.thumbnail_url
+        || galleryAsset?.public_url
+        || null;
+    };
+    const productsById = new Map<string, any>(products.map((product: any) => [product.id, product]));
+    const currentById = new Map<string, any>(order.items.map((item: any) => [item.id, item]));
+    for (const item of body.items) {
+      if (item.id && currentById.get(item.id)?.product_id !== item.product_id) {
+        return reply.status(400).send({ error: 'An order item does not match the selected product' });
+      }
+    }
+
+    const subtotal = body.items.reduce((sum, item) => sum + item.price * item.qty, 0);
+    const total = Math.max(0, subtotal - order.discount_amount + body.shipping_fee);
+
+    try {
+      await prisma.$transaction(async (tx) => {
+        await tx.user.update({
+          where: { id: order.user_id },
+          data: { phone: body.customer.phone, email: body.customer.email || null },
+        });
+        await tx.address.update({
+          where: { id: order.shipping_address_id },
+          data: {
+            name: body.shipping.name,
+            phone: body.shipping.phone,
+            address_line: body.shipping.address_line,
+            city: body.shipping.city,
+            postal_code: body.shipping.postal_code || null,
+            country: body.shipping.country,
+          },
+        });
+
+        const retainedIds = body.items.flatMap((item) => item.id ? [item.id] : []);
+        await tx.orderItem.deleteMany({
+          where: { order_id: id, ...(retainedIds.length ? { id: { notIn: retainedIds } } : {}) },
+        });
+        for (const item of body.items) {
+          if (item.id) {
+            await tx.orderItem.update({ where: { id: item.id }, data: { qty: item.qty, price_snapshot: item.price } });
+            continue;
+          }
+          const product = productsById.get(item.product_id)!;
+          await tx.orderItem.create({
+            data: {
+              order_id: id,
+              product_id: product.id,
+              seller_id: product.seller_id,
+              qty: item.qty,
+              price_snapshot: item.price,
+              currency_snapshot: product.currency,
+              title_snapshot: product.title,
+              sku_details_snapshot: product.sku ? { sku: product.sku } : undefined,
+              image_url_snapshot: productImageUrl(product),
+              source_url_snapshot: product.source_url,
+              product_url_snapshot: product.product_url,
+              seller_name_snapshot: product.vendor_name || product.seller.sellerProfile?.shop_name || product.seller.email,
+              vendor_id_snapshot: product.vendor_id,
+              shop_url_snapshot: product.shop_url,
+              estimated_weight_kg: product.weight_kg ?? 0,
+            },
+          });
+        }
+        await tx.order.update({
+          where: { id },
+          data: {
+            notes: body.notes || null,
+            shipping_fee: body.shipping_fee,
+            estimated_weight_kg: body.estimated_weight_kg,
+            subtotal,
+            total,
+          },
+        });
+      });
+    } catch (error: any) {
+      if (error?.code === 'P2002') return reply.status(409).send({ error: 'That phone number or email is already used by another customer' });
+      throw error;
+    }
+
+    return { success: true };
+  });
+
   fastify.patch('/order-items/:id/fulfillment', { preHandler: auth }, async (request: FastifyRequest, reply: FastifyReply) => {
     const { id } = request.params as { id: string };
     const body = z.object({
@@ -670,6 +817,7 @@ export default async function adminRoutes(fastify: FastifyInstance) {
       seller_id?: string;
       status?: string;
       source_kind?: string;
+      autocomplete?: string;
     };
 
     const page = Math.max(1, parseInt(query.page || '1', 10));
@@ -680,6 +828,7 @@ export default async function adminRoutes(fastify: FastifyInstance) {
     const sellerId = query.seller_id?.trim();
     const status = query.status?.trim();
     const sourceKind = query.source_kind?.trim();
+    const autocomplete = query.autocomplete === '1' || query.autocomplete === 'true';
 
     const where: any = {};
     if (categoryId) {
@@ -701,7 +850,14 @@ export default async function adminRoutes(fastify: FastifyInstance) {
     } else {
       where.source_kind = 'manual';
     }
-    if (search) {
+    if (search && autocomplete) {
+      where.OR = [
+        { title: { startsWith: search, mode: 'insensitive' } },
+        { sku: { startsWith: search, mode: 'insensitive' } },
+        { external_id: { startsWith: search, mode: 'insensitive' } },
+        { brand: { startsWith: search, mode: 'insensitive' } },
+      ];
+    } else if (search) {
       where.OR = [
         { title: { contains: search, mode: 'insensitive' } },
         { sku: { contains: search, mode: 'insensitive' } },
@@ -729,16 +885,45 @@ export default async function adminRoutes(fastify: FastifyInstance) {
             include: { sellerProfile: true },
           },
           coverAsset: true,
+          orderItems: {
+            where: { image_url_snapshot: { not: null } },
+            orderBy: { created_at: 'desc' },
+            take: 1,
+          },
+          cartItems: {
+            where: { image_url_snapshot: { not: null } },
+            orderBy: { created_at: 'desc' },
+            take: 1,
+          },
           videoAsset: true,
         },
-        orderBy: [{ created_at: 'desc' }],
+        orderBy: autocomplete ? [{ title: 'asc' }] : [{ created_at: 'desc' }],
         skip: (page - 1) * limit,
         take: limit,
       }),
     ]);
+    const galleryAssetIds = Array.from(new Set(products.flatMap((product: any) => Array.isArray(product.gallery_asset_ids) ? product.gallery_asset_ids : [])));
+    const galleryAssets = galleryAssetIds.length
+      ? await prisma.mediaAsset.findMany({ where: { id: { in: galleryAssetIds } } })
+      : [];
+    const galleryAssetById = new Map(galleryAssets.map((asset) => [asset.id, asset]));
+    const productImageUrl = (product: any) => {
+      const galleryIds = Array.isArray(product.gallery_asset_ids) ? product.gallery_asset_ids : [];
+      const galleryAsset = galleryIds.map((assetId: string) => galleryAssetById.get(assetId)).find(Boolean);
+      return product.coverAsset?.thumbnail_url
+        || product.coverAsset?.public_url
+        || product.orderItems?.[0]?.image_url_snapshot
+        || product.cartItems?.[0]?.image_url_snapshot
+        || galleryAsset?.thumbnail_url
+        || galleryAsset?.public_url
+        || null;
+    };
 
     return {
-      products,
+      products: products.map((product: any) => ({
+        ...product,
+        image_url: productImageUrl(product),
+      })),
       total,
       totalPages: Math.max(1, Math.ceil(total / limit)),
       page,
