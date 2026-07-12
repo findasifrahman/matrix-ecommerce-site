@@ -14,7 +14,7 @@
             <div
               :key="`hero-desktop-${activeHeroIndex}`"
               class="absolute inset-y-0 right-0 hidden w-[54%] bg-cover bg-center lg:block"
-              :style="{ backgroundImage: `linear-gradient(90deg, rgba(223,232,226,0.45) 0%, rgba(223,232,226,0.20) 22%, rgba(223,232,226,0) 58%), url('${activeHeroImage}')` }"
+              :style="{ backgroundImage: `linear-gradient(90deg, rgba(223,232,226,0.98) 0%, rgba(223,232,226,0.70) 22%, rgba(223,232,226,0.08) 58%), url('${activeHeroImage}')` }"
             />
           </Transition>
           <div class="absolute inset-0 bg-[radial-gradient(circle_at_18%_18%,rgba(255,255,255,0.88),transparent_34%),linear-gradient(110deg,rgba(255,255,255,0.82),rgba(255,255,255,0.38)_68%)] lg:bg-[radial-gradient(circle_at_18%_18%,rgba(255,255,255,0.85),transparent_34%),linear-gradient(110deg,rgba(255,255,255,0.72),rgba(255,255,255,0)_68%)]" />

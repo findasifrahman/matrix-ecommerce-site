@@ -42,6 +42,26 @@ function uniquePhoneCandidates(rawPhone?: string | null) {
   return Array.from(new Set([normalizeBangladeshPhone(rawPhone), rawPhone.trim()].filter(Boolean)));
 }
 
+const defaultDeliveryCharges = [
+  { delivery_area: 'inside_dhaka', cost: 50, per_kg_charge: 30, is_active: true },
+  { delivery_area: 'outside_dhaka', cost: 100, per_kg_charge: 30, is_active: true },
+] as const;
+
+function calculateDeliveryFee(charge: { cost?: number | null; per_kg_charge?: number | null }, weightKg: number) {
+  const billableKg = Math.ceil(Math.max(0, Number(weightKg || 0)));
+  return Number(charge.cost || 0) + (billableKg * Number(charge.per_kg_charge ?? 30));
+}
+
+async function ensureDefaultDeliveryCharges() {
+  for (const row of defaultDeliveryCharges) {
+    await prisma.shippingCharge.upsert({
+      where: { delivery_area: row.delivery_area },
+      update: {},
+      create: row,
+    });
+  }
+}
+
 async function getOrCreateCart(userId: string) {
   return prisma.cart.upsert({
     where: { user_id: userId },
@@ -614,7 +634,7 @@ export default async function userRoutes(fastify: FastifyInstance) {
           vendor_id_snapshot: item.vendorId || productSnapshot.vendor_id || null,
           shop_url_snapshot: item.shopUrl || productSnapshot.shop_url || null,
           selected_shipping_method: item.selectedShippingMethod || null,
-          estimated_weight_kg: item.estimatedWeight ?? null,
+          estimated_weight_kg: product.weight_kg ?? 0,
         } as any,
       });
     }
@@ -869,16 +889,18 @@ export default async function userRoutes(fastify: FastifyInstance) {
         vendor_id_snapshot: item.vendorId || productSnapshot.vendor_id || null,
         shop_url_snapshot: item.shopUrl || productSnapshot.shop_url || null,
         selected_shipping_method: item.selectedShippingMethod || body.shipping_method || null,
-        estimated_weight_kg: item.estimatedWeight ?? product.weight_kg ?? null,
+        estimated_weight_kg: product.weight_kg ?? 0,
       });
     }
 
     const currency = body.currency || 'BDT';
     const subtotal = resolvedItems.reduce((sum, item) => sum + item.price_snapshot * item.qty, 0);
+    const estimatedWeightKg = resolvedItems.reduce((sum, item) => sum + Number(item.estimated_weight_kg || 0) * Number(item.qty || 0), 0);
+    await ensureDefaultDeliveryCharges();
     const shippingCharges = await prisma.shippingCharge.findMany({
-      where: { is_active: true },
-      orderBy: [{ cost: 'asc' }, { delivery_area: 'asc' }],
-      select: { id: true, delivery_area: true, cost: true },
+      where: { is_active: true, delivery_area: { in: ['inside_dhaka', 'outside_dhaka'] } },
+      orderBy: [{ delivery_area: 'asc' }],
+      select: { id: true, delivery_area: true, cost: true, per_kg_charge: true },
     });
     const selectedShippingCharge = shippingCharges.find((item) => item.id === body.shipping_charge_id)
       || shippingCharges.find((item) => item.delivery_area === 'outside_dhaka')
@@ -888,7 +910,7 @@ export default async function userRoutes(fastify: FastifyInstance) {
       return reply.status(400).send({ error: 'No shipping charge is configured. Please contact the admin team.' });
     }
     const shippingMethod = body.shipping_method || selectedShippingCharge.delivery_area;
-    const shippingFee = Number(selectedShippingCharge.cost || 0);
+    const shippingFee = calculateDeliveryFee(selectedShippingCharge, estimatedWeightKg);
     const paymentMethod = body.payment_method || 'cash_on_delivery';
     const couponResult = body.coupon_code
       ? await evaluateCoupon(prisma, {
@@ -936,6 +958,7 @@ export default async function userRoutes(fastify: FastifyInstance) {
           coupon_code: finalCoupon?.code || null,
           coupon_id: finalCoupon?.id || null,
           shipping_fee: shippingFee,
+          estimated_weight_kg: estimatedWeightKg,
           total: Math.max(0, subtotal - finalDiscountAmount) + shippingFee,
           shipping_method: shippingMethod,
           shipping_address_id: body.shipping_address_id,

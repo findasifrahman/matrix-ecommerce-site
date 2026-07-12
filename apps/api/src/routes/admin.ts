@@ -136,10 +136,26 @@ const couponSchema = z.object({
 });
 
 const shippingChargeSchema = z.object({
-  delivery_area: z.string().trim().min(2).max(120),
+  delivery_area: z.enum(['inside_dhaka', 'outside_dhaka']),
   cost: z.number().min(0),
+  per_kg_charge: z.number().min(0).default(30),
   is_active: z.boolean().default(true),
 });
+
+const defaultDeliveryCharges = [
+  { delivery_area: 'inside_dhaka', cost: 50, per_kg_charge: 30, is_active: true },
+  { delivery_area: 'outside_dhaka', cost: 100, per_kg_charge: 30, is_active: true },
+] as const;
+
+async function ensureDefaultDeliveryCharges(client: typeof prisma = prisma) {
+  for (const row of defaultDeliveryCharges) {
+    await client.shippingCharge.upsert({
+      where: { delivery_area: row.delivery_area },
+      update: {},
+      create: row,
+    });
+  }
+}
 
 function parseCouponDate(value: string | null | undefined) {
   if (!value) return null;
@@ -941,8 +957,10 @@ export default async function adminRoutes(fastify: FastifyInstance) {
   });
 
   fastify.get('/shipping-charges', { preHandler: auth }, async () => {
+    await ensureDefaultDeliveryCharges();
     return prisma.shippingCharge.findMany({
-      orderBy: [{ cost: 'asc' }, { delivery_area: 'asc' }],
+      where: { delivery_area: { in: ['inside_dhaka', 'outside_dhaka'] } },
+      orderBy: [{ delivery_area: 'asc' }],
     });
   });
 
@@ -950,14 +968,21 @@ export default async function adminRoutes(fastify: FastifyInstance) {
     const body = shippingChargeSchema.parse(request.body);
 
     try {
-      const charge = await prisma.shippingCharge.create({
-        data: {
+      const charge = await prisma.shippingCharge.upsert({
+        where: { delivery_area: body.delivery_area },
+        update: {
+          cost: Number(body.cost || 0),
+          per_kg_charge: Number(body.per_kg_charge ?? 30),
+          is_active: body.is_active,
+        },
+        create: {
           delivery_area: body.delivery_area,
           cost: Number(body.cost || 0),
+          per_kg_charge: Number(body.per_kg_charge ?? 30),
           is_active: body.is_active,
         },
       });
-      return reply.status(201).send(charge);
+      return reply.status(200).send(charge);
     } catch (error: any) {
       if (String(error?.message || '').includes('shipping_charges_delivery_area_key')) {
         return reply.status(409).send({ error: 'A shipping charge already exists for this delivery area.' });
@@ -981,6 +1006,7 @@ export default async function adminRoutes(fastify: FastifyInstance) {
         data: {
           delivery_area: body.delivery_area === undefined ? undefined : body.delivery_area,
           cost: body.cost === undefined ? undefined : Number(body.cost),
+          per_kg_charge: body.per_kg_charge === undefined ? undefined : Number(body.per_kg_charge),
           is_active: body.is_active === undefined ? undefined : body.is_active,
         },
       });
@@ -997,6 +1023,9 @@ export default async function adminRoutes(fastify: FastifyInstance) {
     const existing = await prisma.shippingCharge.findUnique({ where: { id } });
     if (!existing) {
       return reply.status(404).send({ error: 'Shipping charge not found' });
+    }
+    if (['inside_dhaka', 'outside_dhaka'].includes(existing.delivery_area)) {
+      return reply.status(400).send({ error: 'Default delivery types cannot be deleted. Disable it instead.' });
     }
     await prisma.shippingCharge.delete({ where: { id } });
     return { success: true };

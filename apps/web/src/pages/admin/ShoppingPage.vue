@@ -326,62 +326,80 @@
         <div class="flex items-center justify-between gap-3">
           <div>
             <h3 class="text-lg font-semibold">Delivery charges</h3>
-            <p class="text-sm text-slate-500">Manage checkout delivery areas and COD fees from one place.</p>
+            <p class="text-sm text-slate-500">Manage checkout base fees and per-kg delivery pricing from one place.</p>
           </div>
           <Button variant="ghost" size="sm" @click="loadShippingCharges">Refresh</Button>
         </div>
       </CardHeader>
       <CardBody class="space-y-6">
-        <div class="grid gap-4 xl:grid-cols-[360px_minmax(0,1fr)]">
-          <form class="space-y-3 rounded-2xl border border-slate-200 p-4" @submit.prevent="saveShippingCharge">
-            <h4 class="font-semibold text-slate-900">Add delivery charge</h4>
-            <div v-if="taxonomyFeedback.shippingCharge" class="rounded-2xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">
-              {{ taxonomyFeedback.shippingCharge }}
+        <div class="rounded-2xl border border-slate-200 bg-white p-4">
+          <div class="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <h4 class="font-semibold text-slate-900">Delivery pricing rules</h4>
+              <p class="mt-1 text-sm text-slate-500">
+                Checkout uses <span class="font-semibold text-slate-700">base charge + ceil(total product weight) x per kg charge</span>.
+                Missing product weight counts as 0.0 kg.
+              </p>
             </div>
-            <Input v-model="shippingChargeForm.delivery_area" label="Delivery area" placeholder="inside Dhaka" />
-            <Input v-model.number="shippingChargeForm.cost" type="number" min="0" label="Cost (BDT)" />
-            <label class="flex items-center gap-2 text-sm text-slate-700">
-              <input v-model="shippingChargeForm.is_active" type="checkbox" class="h-4 w-4 rounded border-slate-300 text-teal-600" />
-              Active
-            </label>
-            <Button type="submit" variant="primary" size="sm" :loading="saving">Save delivery charge</Button>
-          </form>
+            <div class="rounded-2xl bg-teal-50 px-4 py-3 text-sm text-teal-800">
+              Example: 1.1 kg uses 2 kg billing weight.
+            </div>
+          </div>
 
-          <div class="rounded-2xl border border-slate-200 p-4">
-            <h4 class="font-semibold text-slate-900">Configured delivery areas</h4>
-            <div class="mt-3 space-y-3 text-sm">
-              <div v-for="charge in shippingCharges" :key="charge.id" class="rounded-xl bg-slate-50 px-4 py-4">
+          <div v-if="taxonomyFeedback.shippingCharge" class="mt-4 rounded-2xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">
+            {{ taxonomyFeedback.shippingCharge }}
+          </div>
+
+          <div class="mt-5 overflow-hidden rounded-2xl border border-slate-200">
+            <div class="grid grid-cols-[1.1fr_1fr_1fr_0.8fr_1fr] gap-3 bg-slate-50 px-4 py-3 text-xs font-black uppercase tracking-[0.18em] text-slate-500">
+              <div>Delivery type</div>
+              <div>Base charge</div>
+              <div>Per kg</div>
+              <div>Status</div>
+              <div class="text-right">Action</div>
+            </div>
+            <div class="divide-y divide-slate-200 text-sm">
+              <div v-for="charge in shippingCharges" :key="charge.id" class="px-4 py-4">
                 <div v-if="editingShippingChargeId === charge.id" class="space-y-3">
                   <div v-if="taxonomyFeedback.shippingChargeEdit" class="rounded-2xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">
                     {{ taxonomyFeedback.shippingChargeEdit }}
                   </div>
-                  <div class="grid gap-3 md:grid-cols-2">
-                    <Input v-model="shippingChargeEditForm.delivery_area" label="Delivery area" />
-                    <Input v-model.number="shippingChargeEditForm.cost" type="number" min="0" label="Cost (BDT)" />
+                  <div class="grid gap-3 md:grid-cols-[1.1fr_1fr_1fr_0.8fr] md:items-end">
+                    <div>
+                      <div class="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">Delivery type</div>
+                      <div class="mt-2 rounded-xl bg-slate-50 px-3 py-3 font-bold text-slate-900">{{ deliveryAreaLabel(charge.delivery_area) }}</div>
+                    </div>
+                    <Input v-model.number="shippingChargeEditForm.cost" type="number" min="0" step="1" label="Base charge (BDT)" />
+                    <Input v-model.number="shippingChargeEditForm.per_kg_charge" type="number" min="0" step="1" label="Per kg charge (BDT)" />
+                    <label class="flex items-center gap-2 rounded-xl border border-slate-200 px-3 py-3 text-sm text-slate-700">
+                      <input v-model="shippingChargeEditForm.is_active" type="checkbox" class="h-4 w-4 rounded border-slate-300 text-teal-600" />
+                      Active
+                    </label>
                   </div>
-                  <label class="flex items-center gap-2 text-sm text-slate-700">
-                    <input v-model="shippingChargeEditForm.is_active" type="checkbox" class="h-4 w-4 rounded border-slate-300 text-teal-600" />
-                    Active
-                  </label>
                   <div class="flex justify-end gap-2">
                     <Button variant="ghost" size="sm" type="button" @click="cancelShippingChargeEdit">Cancel</Button>
                     <Button variant="primary" size="sm" type="button" :loading="saving" @click="updateShippingCharge(charge)">Save changes</Button>
                   </div>
                 </div>
-                <div v-else class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                  <div class="min-w-0">
-                    <div class="font-semibold text-slate-900">{{ charge.delivery_area }}</div>
-                    <div class="mt-1 text-sm font-medium text-teal-700">{{ money(charge.cost, 'BDT') }}</div>
-                    <div class="mt-1 text-xs text-slate-500">{{ charge.is_active ? 'Active at checkout' : 'Hidden from checkout' }}</div>
+                <div v-else class="grid gap-3 md:grid-cols-[1.1fr_1fr_1fr_0.8fr_1fr] md:items-center">
+                  <div>
+                    <div class="font-bold text-slate-900">{{ deliveryAreaLabel(charge.delivery_area) }}</div>
+                    <div class="mt-1 text-xs font-semibold text-slate-500">{{ charge.delivery_area }}</div>
                   </div>
-                  <div class="flex items-center gap-2">
+                  <div class="font-bold text-teal-700">{{ money(charge.cost, 'BDT') }}</div>
+                  <div class="font-bold text-indigo-700">{{ money(charge.per_kg_charge ?? 30, 'BDT') }} / kg</div>
+                  <div>
+                    <span :class="charge.is_active ? 'bg-emerald-50 text-emerald-700 ring-emerald-100' : 'bg-slate-100 text-slate-500 ring-slate-200'" class="inline-flex rounded-full px-3 py-1 text-xs font-bold ring-1">
+                      {{ charge.is_active ? 'Active' : 'Hidden' }}
+                    </span>
+                  </div>
+                  <div class="flex justify-end">
                     <Button variant="primary" size="sm" type="button" @click="startShippingChargeEdit(charge)">Edit charge</Button>
-                    <Button variant="ghost" size="sm" class="text-red-600 hover:text-red-700" @click="deleteShippingCharge(charge)">Delete</Button>
                   </div>
                 </div>
               </div>
               <div v-if="shippingCharges.length === 0" class="rounded-xl border border-dashed border-slate-200 bg-white px-3 py-4 text-slate-500">
-                No delivery areas added yet.
+                No delivery pricing rows found. Click refresh to create the default inside/outside Dhaka rows.
               </div>
             </div>
           </div>
@@ -878,11 +896,6 @@ const productTypeEditForm = reactive({
   slug: '',
   sort_order: 0,
 });
-const shippingChargeForm = reactive({
-  delivery_area: '',
-  cost: 0,
-  is_active: true,
-});
 const brandModelEditForm = reactive({
   id: '',
   brand_id: '',
@@ -893,6 +906,7 @@ const brandModelEditForm = reactive({
 const shippingChargeEditForm = reactive({
   delivery_area: '',
   cost: 0,
+  per_kg_charge: 30,
   is_active: true,
 });
 
@@ -1020,6 +1034,12 @@ const activeSkuImageId = computed(() => {
 
 function money(amount: number | null | undefined, currency = 'BDT') {
   return `${currency} ${(amount ?? 0).toLocaleString()}`;
+}
+
+function deliveryAreaLabel(area: string) {
+  if (area === 'inside_dhaka') return 'Inside Dhaka';
+  if (area === 'outside_dhaka') return 'Outside Dhaka';
+  return area;
 }
 
 function brandMainCategoryLabel(brand: any) {
@@ -1651,6 +1671,7 @@ function startShippingChargeEdit(charge: any) {
   Object.assign(shippingChargeEditForm, {
     delivery_area: charge.delivery_area || '',
     cost: Number(charge.cost || 0),
+    per_kg_charge: Number(charge.per_kg_charge ?? 30),
     is_active: Boolean(charge.is_active),
   });
 }
@@ -1661,30 +1682,9 @@ function cancelShippingChargeEdit() {
   Object.assign(shippingChargeEditForm, {
     delivery_area: '',
     cost: 0,
+    per_kg_charge: 30,
     is_active: true,
   });
-}
-
-async function saveShippingCharge() {
-  clearTaxonomyFeedback();
-  saving.value = true;
-  try {
-    await axios.post('/api/admin/shipping-charges', {
-      delivery_area: shippingChargeForm.delivery_area,
-      cost: Number(shippingChargeForm.cost || 0),
-      is_active: shippingChargeForm.is_active,
-    }, {
-      suppressGlobalErrorToast: true,
-    } as any);
-    toast.success('Delivery charge saved');
-    Object.assign(shippingChargeForm, { delivery_area: '', cost: 0, is_active: true });
-    await loadShippingCharges();
-  } catch (error: any) {
-    taxonomyFeedback.shippingCharge = extractRequestError(error, 'Failed to save delivery charge.');
-    toast.error(taxonomyFeedback.shippingCharge);
-  } finally {
-    saving.value = false;
-  }
 }
 
 async function updateShippingCharge(charge: any) {
@@ -1699,6 +1699,7 @@ async function updateShippingCharge(charge: any) {
     await axios.patch(`/api/admin/shipping-charges/${charge.id}`, {
       delivery_area: shippingChargeEditForm.delivery_area,
       cost: Number(shippingChargeEditForm.cost || 0),
+      per_kg_charge: Number(shippingChargeEditForm.per_kg_charge ?? 30),
       is_active: shippingChargeEditForm.is_active,
     }, {
       suppressGlobalErrorToast: true,

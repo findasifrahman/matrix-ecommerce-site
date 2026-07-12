@@ -554,6 +554,7 @@ model ShippingCharge {
   id            String   @id @default(uuid())
   delivery_area String   @unique
   cost          Float
+  per_kg_charge Float    @default(30)
   is_active     Boolean  @default(true)
   created_at    DateTime @default(now())
   updated_at    DateTime @updatedAt

@@ -218,8 +218,8 @@ async function syncLegacyCategoryMirror() {
 
 async function syncShippingChargeSeed() {
   const rows = [
-    { delivery_area: 'inside Dhaka', cost: 80 },
-    { delivery_area: 'outside_dhaka', cost: 130 },
+    { delivery_area: 'inside_dhaka', cost: 50, per_kg_charge: 30 },
+    { delivery_area: 'outside_dhaka', cost: 100, per_kg_charge: 30 },
   ];
 
   for (const row of rows) {
@@ -227,11 +227,13 @@ async function syncShippingChargeSeed() {
       where: { delivery_area: row.delivery_area },
       update: {
         cost: row.cost,
+        per_kg_charge: row.per_kg_charge,
         is_active: true,
       },
       create: {
         delivery_area: row.delivery_area,
         cost: row.cost,
+        per_kg_charge: row.per_kg_charge,
         is_active: true,
       },
     });

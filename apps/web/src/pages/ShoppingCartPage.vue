@@ -369,6 +369,21 @@
                 <span class="text-slate-600">Cash on delivery fee</span>
                 <span class="font-bold text-slate-900">{{ formatPrice(shippingFee) }}</span>
               </div>
+              <div class="rounded-2xl border border-teal-100 bg-teal-50 px-3 py-2 text-xs leading-5 text-teal-800">
+                <div class="flex items-center justify-between gap-3">
+                  <span>Product weight</span>
+                  <span class="font-bold">{{ totalCartWeightKg.toFixed(2) }} kg</span>
+                </div>
+                <!--
+                <div class="flex items-center justify-between gap-3">
+                  <span>Billable weight</span>
+                  <span class="font-bold">{{ billableWeightKg }} kg</span>
+                </div>
+                <div v-if="selectedShippingCharge" class="mt-1 text-teal-700">
+                  {{ deliveryAreaLabel(selectedShippingCharge.delivery_area) }}: {{ formatPrice(Number(selectedShippingCharge.cost || 0)) }} base + {{ formatPrice(Number(selectedShippingCharge.per_kg_charge ?? 30)) }}/kg
+                </div>
+              -->
+              </div>
               <div class="rounded-2xl border border-slate-200 bg-white p-3">
                 <label class="mb-2 block text-xs font-bold uppercase tracking-[0.18em] text-slate-500">Coupon code</label>
                 <div class="flex gap-2">
@@ -491,7 +506,6 @@ const checkoutAuthRef = ref<HTMLElement | null>(null);
 const submitting = ref(false);
 const addresses = ref<any[]>([]);
 const selectedAddressId = ref('');
-const shippingFee = ref<number>(0);
 const notes = ref('');
 const savingAddress = ref(false);
 const syncingCart = ref(false);
@@ -574,10 +588,20 @@ const couponDiscount = computed(() => {
 });
 
 const grandTotal = computed(() => Math.max(0, subtotal.value - couponDiscount.value) + (shippingFee.value || 0));
+const totalCartWeightKg = computed(() => cartItems.value.reduce((sum, item) => {
+  const weight = Number(item?.estimatedWeight ?? item?.estimated_weight_kg ?? item?.weight_kg ?? 0);
+  return sum + (Number.isFinite(weight) ? Math.max(0, weight) * getItemCheckoutQuantity(item) : 0);
+}, 0));
+const billableWeightKg = computed(() => Math.ceil(Math.max(0, totalCartWeightKg.value)));
+const shippingFee = computed(() => {
+  const charge = selectedShippingCharge.value;
+  if (!charge) return 0;
+  return Number(charge.cost || 0) + (billableWeightKg.value * Number(charge.per_kg_charge ?? 30));
+});
 const shippingChargeOptions = computed(() =>
   shippingCharges.value.map((item: any) => ({
     value: item.id,
-    label: `${item.delivery_area} - ${formatPrice(Number(item.cost || 0))}`,
+    label: `${deliveryAreaLabel(item.delivery_area)} - ${formatPrice(Number(item.cost || 0))} + ${formatPrice(Number(item.per_kg_charge ?? 30))}/kg`,
   }))
 );
 const selectedShippingCharge = computed(() =>
@@ -638,6 +662,12 @@ const checkoutPrimaryLabel = computed(() => {
 
 function formatPrice(price: number): string {
   return `BDT ${price.toLocaleString('en-US', { maximumFractionDigits: 0 })}`;
+}
+
+function deliveryAreaLabel(area: string): string {
+  if (area === 'inside_dhaka') return 'Inside Dhaka';
+  if (area === 'outside_dhaka') return 'Outside Dhaka';
+  return area;
 }
 
 function clearAppliedCoupon() {
@@ -807,7 +837,7 @@ function buildCheckoutItems() {
       shopUrl: item.shopUrl,
       skuDetails: item.skuDetails,
       selectedShippingMethod: 'local',
-      estimatedWeight: item.estimatedWeight,
+      estimatedWeight: Number(item.estimatedWeight ?? item.estimated_weight_kg ?? item.weight_kg ?? 0),
     };
   });
 }
@@ -1046,7 +1076,4 @@ onMounted(() => {
   }
 });
 
-watch(selectedShippingCharge, (value) => {
-  shippingFee.value = Number(value?.cost || 0);
-}, { immediate: true });
 </script>
