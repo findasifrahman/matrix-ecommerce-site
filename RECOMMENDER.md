@@ -51,10 +51,14 @@ Create a separate Railway service from the same GitHub repo.
 
 Recommended service settings:
 
-- Root directory: repository root
-- Build command: `pip install -r apps/recommender/requirements.txt`
-- Start command: `python apps/recommender/train_recommendations.py`
+- Root directory: `/apps/recommender`
+- Config as Code file path: `/apps/recommender/railway.toml`
+- Build command: leave empty, or use `python -m pip install --upgrade pip && pip install -r requirements.txt`
+- Start command: leave empty, or use `python train_recommendations.py`
 - Environment: copy the same `DATABASE_URL` used by the API service
+
+Important: do not let this recommender service use the repository root `/railway.toml`.
+The root config is only for the Node API/frontend services and will try to run `pnpm`.
 
 For scheduled training, use one of these:
 

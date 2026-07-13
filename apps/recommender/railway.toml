@@ -1,0 +1,12 @@
+[build]
+builder = "NIXPACKS"
+buildCommand = "python -m pip install --upgrade pip && pip install -r requirements.txt"
+watchPatterns = [
+  "/apps/recommender/**",
+  "/apps/api/prisma/schema.ecommerce.prisma",
+  "/apps/api/prisma/migrations/**"
+]
+
+[deploy]
+startCommand = "python train_recommendations.py"
+restartPolicyType = "NEVER"
