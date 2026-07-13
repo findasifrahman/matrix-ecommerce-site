@@ -4,8 +4,11 @@ const DETAIL_KEY_PREFIX = 'bc_shopping_detail_v3:';
 const MAX_INTENTS = 50;
 const MAX_PRODUCTS = 80;
 const TTL_MS = 7 * 24 * 60 * 60 * 1000;
+const ANON_ID_KEY = 'bc_recommendation_anon_id_v1';
+const SESSION_ID_KEY = 'bc_recommendation_session_id_v1';
 
 type IntentType = 'search' | 'category' | 'menu' | 'product';
+type RecommendationEventType = 'impression' | 'product_click' | 'product_view' | 'add_to_cart' | 'buy_now' | 'search' | 'category_view' | 'checkout_started';
 
 type ShoppingIntent = {
   id: string;
@@ -42,6 +45,52 @@ function normalizeText(value: unknown) {
 
 function productId(product: any) {
   return String(product?.externalId || product?.external_id || product?.id || '').trim();
+}
+
+function getOrCreateClientId(key: string) {
+  try {
+    const existing = localStorage.getItem(key);
+    if (existing) return existing;
+    const value = `${Date.now()}-${Math.random().toString(36).slice(2)}-${Math.random().toString(36).slice(2)}`;
+    localStorage.setItem(key, value);
+    return value;
+  } catch {
+    return '';
+  }
+}
+
+export function recordRecommendationEvent(eventType: RecommendationEventType, product?: any, metadata: Record<string, unknown> = {}) {
+  if (typeof window === 'undefined') return;
+  const externalId = product ? productId(product) : '';
+  const searchQuery = typeof metadata.search_query === 'string' ? metadata.search_query : undefined;
+  if (!externalId && !searchQuery && eventType !== 'checkout_started') return;
+
+  const payload = {
+    event_type: eventType,
+    external_id: externalId || undefined,
+    anonymous_id: getOrCreateClientId(ANON_ID_KEY) || undefined,
+    session_id: getOrCreateClientId(SESSION_ID_KEY) || undefined,
+    source: metadata.source || 'web',
+    search_query: searchQuery,
+    referrer: document.referrer || undefined,
+    metadata: {
+      path: window.location.pathname,
+      title: product?.title,
+      price: product?.priceMin ?? product?.price ?? product?.displayPriceMin,
+      ...metadata,
+    },
+  };
+
+  window.setTimeout(() => {
+    fetch('/api/public/recommendation-events', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+      keepalive: true,
+    }).catch(() => {
+      // Recommendation tracking should never break shopping UX.
+    });
+  }, 0);
 }
 
 function hasProductImage(product: any) {
@@ -123,6 +172,7 @@ export function recordSearchIntent(query: string, products: any[] = []) {
   const value = query.trim();
   if (!value) return;
   recordShoppingIntent('search', { key: value, query: value, label: value });
+  recordRecommendationEvent('search', undefined, { search_query: value, result_count: products.length, source: 'shopping_search' });
   cacheProductCards(products);
 }
 
@@ -130,6 +180,7 @@ export function recordCategoryIntent(category: string, label?: string, products:
   const value = String(category || label || '').trim();
   if (!value) return;
   recordShoppingIntent('category', { key: value, category: value, label: label || value });
+  recordRecommendationEvent('category_view', undefined, { search_query: value, label: label || value, result_count: products.length, source: 'category' });
   cacheProductCards(products);
 }
 
@@ -143,6 +194,7 @@ export function recordProductIntent(product: any) {
   const id = productId(product);
   if (!id) return;
   cacheProductCards([product]);
+  recordRecommendationEvent('product_click', product, { source: 'product_card' });
   recordShoppingIntent('product', {
     key: id,
     productId: id,

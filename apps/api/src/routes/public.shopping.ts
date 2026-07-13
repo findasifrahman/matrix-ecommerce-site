@@ -1,5 +1,6 @@
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import { prisma } from '../lib/prisma.js';
+import { z } from 'zod';
 import {
   getCategories,
   getCuratedHomeSections,
@@ -15,6 +16,61 @@ import {
   searchByVendorId,
 } from '../modules/shopping/shopping.service.js';
 import { getHotItemsSchema, searchByKeywordSchema } from '../modules/shopping/shopping.schemas.js';
+
+const recommendationEventSchema = z.object({
+  event_type: z.enum([
+    'impression',
+    'product_click',
+    'product_view',
+    'add_to_cart',
+    'buy_now',
+    'search',
+    'category_view',
+    'checkout_started',
+    'purchase',
+  ]),
+  product_id: z.string().optional().nullable(),
+  external_id: z.string().optional().nullable(),
+  anonymous_id: z.string().trim().max(120).optional().nullable(),
+  session_id: z.string().trim().max(120).optional().nullable(),
+  source: z.string().trim().max(120).optional().nullable(),
+  search_query: z.string().trim().max(240).optional().nullable(),
+  referrer: z.string().trim().max(500).optional().nullable(),
+  metadata: z.record(z.any()).optional().nullable(),
+});
+
+const recommendationEventWeights: Record<string, number> = {
+  impression: 0.2,
+  search: 0.4,
+  category_view: 0.5,
+  product_click: 1,
+  product_view: 2,
+  add_to_cart: 4,
+  checkout_started: 5,
+  buy_now: 6,
+  purchase: 8,
+};
+
+const getRecommendationSchema = z.object({
+  limit: z.coerce.number().int().min(1).max(24).default(12),
+});
+
+function recommendationProductCard(row: any) {
+  const product = row.product;
+  return {
+    id: product.id,
+    externalId: product.external_id || product.id,
+    title: product.title,
+    priceMin: product.price,
+    priceMax: product.original_price || product.price,
+    currency: product.currency,
+    imageUrl: product.coverAsset?.thumbnail_url || product.coverAsset?.public_url || null,
+    sku: product.sku,
+    score: row.score,
+    rank: row.rank,
+    reason: row.reason,
+  };
+}
 
 function isDatabaseUnavailable(error: any): boolean {
   const message = String(error?.message || '');
@@ -103,6 +159,96 @@ function buildHomepageVisualMenuSections(rows: any[]) {
 }
 
 export default async function publicShoppingRoutes(fastify: FastifyInstance) {
+  fastify.post('/recommendation-events', async (request: FastifyRequest, reply: FastifyReply) => {
+    const body = recommendationEventSchema.parse(request.body);
+    let productId = body.product_id || null;
+
+    if (!productId && body.external_id) {
+      const product = await prisma.product.findFirst({
+        where: {
+          OR: [
+            { id: body.external_id },
+            { external_id: body.external_id },
+          ],
+        },
+        select: { id: true },
+      });
+      productId = product?.id || null;
+    }
+
+    if (!productId && !body.search_query && !body.anonymous_id && !body.session_id) {
+      return reply.status(202).send({ accepted: false });
+    }
+
+    await prisma.recommendationEvent.create({
+      data: {
+        product_id: productId,
+        anonymous_id: body.anonymous_id || null,
+        session_id: body.session_id || null,
+        event_type: body.event_type,
+        event_weight: recommendationEventWeights[body.event_type] ?? 1,
+        source: body.source || null,
+        search_query: body.search_query || null,
+        referrer: body.referrer || null,
+        metadata: body.metadata || undefined,
+      },
+    });
+
+    return reply.status(202).send({ accepted: true });
+  });
+
+  fastify.get('/recommendations/global', async (request: FastifyRequest) => {
+    const query = getRecommendationSchema.parse(request.query);
+    const latestModel = await prisma.recommendationModelVersion.findFirst({
+      where: { status: 'completed' },
+      orderBy: { trained_at: 'desc' },
+      select: { id: true, version: true },
+    });
+    if (!latestModel) return { version: null, items: [] };
+
+    const rows = await prisma.productRecommendation.findMany({
+      where: {
+        model_version_id: latestModel.id,
+        subject_type: 'global',
+        product: { status: 'published' },
+      },
+      orderBy: [{ rank: 'asc' }, { score: 'desc' }],
+      take: query.limit,
+      include: { product: { include: { coverAsset: true } } },
+    });
+    return { version: latestModel.version, items: rows.map(recommendationProductCard) };
+  });
+
+  fastify.get('/recommendations/product/:externalId', async (request: FastifyRequest, reply: FastifyReply) => {
+    const { externalId } = request.params as { externalId: string };
+    const query = getRecommendationSchema.parse(request.query);
+    const product = await prisma.product.findFirst({
+      where: { OR: [{ id: externalId }, { external_id: externalId }] },
+      select: { id: true },
+    });
+    if (!product) return reply.status(404).send({ error: 'Product not found' });
+
+    const latestModel = await prisma.recommendationModelVersion.findFirst({
+      where: { status: 'completed' },
+      orderBy: { trained_at: 'desc' },
+      select: { id: true, version: true },
+    });
+    if (!latestModel) return { version: null, items: [] };
+
+    const rows = await prisma.productRecommendation.findMany({
+      where: {
+        model_version_id: latestModel.id,
+        subject_type: 'product',
+        anchor_product_id: product.id,
+        product: { status: 'published' },
+      },
+      orderBy: [{ rank: 'asc' }, { score: 'desc' }],
+      take: query.limit,
+      include: { product: { include: { coverAsset: true } } },
+    });
+    return { version: latestModel.version, items: rows.map(recommendationProductCard) };
+  });
+
   fastify.get('/blog', async () => {
     const posts = await prisma.blogPost.findMany({
       where: { status: 'published' },

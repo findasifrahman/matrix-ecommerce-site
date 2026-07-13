@@ -986,6 +986,24 @@ export default async function userRoutes(fastify: FastifyInstance) {
         },
       });
 
+      if (resolvedItems.length > 0) {
+        await tx.recommendationEvent.createMany({
+          data: resolvedItems.map((item) => ({
+            user_id: req.user.id,
+            product_id: item.product_id,
+            event_type: 'purchase',
+            event_weight: 8,
+            source: 'checkout',
+            metadata: {
+              order_id: createdOrder.id,
+              qty: item.qty,
+              price: item.price_snapshot,
+              currency,
+            },
+          })),
+        });
+      }
+
       if (finalCoupon && finalDiscountAmount > 0) {
         const updated = await tx.$queryRaw(Prisma.sql`
           UPDATE "coupons"

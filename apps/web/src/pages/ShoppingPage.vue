@@ -249,7 +249,7 @@ import axios from '@/utils/axios';
 import { Button, useToast } from '@matrix-ecommerce/ui';
 import ProductCard from '@/components/shopping/ProductCard.vue';
 import { useShoppingCart } from '@/composables/useShoppingCart';
-import { getYouMayLikeProducts, recordMenuIntent, recordProductIntent } from '@/utils/shopping-personalization';
+import { getYouMayLikeProducts, recordMenuIntent, recordProductIntent, recordRecommendationEvent } from '@/utils/shopping-personalization';
 import { useSeo } from '@/utils/seo';
 
 const router = useRouter();
@@ -492,6 +492,7 @@ function openProduct(product: any) {
 
 function addProduct(product: any) {
   addToCart(product, 1);
+  recordRecommendationEvent('add_to_cart', product, { source: 'homepage_card', qty: 1 });
   toast.success('Added to cart');
 }
 

@@ -527,6 +527,7 @@ import axios from '@/utils/axios';
 import { useToast, Button } from '@matrix-ecommerce/ui';
 import { ArrowLeft, ChevronLeft, ChevronRight, Layers3, Package, RefreshCcw, Star, Truck, X, ZoomIn } from 'lucide-vue-next';
 import { useShoppingCart } from '@/composables/useShoppingCart';
+import { recordRecommendationEvent } from '@/utils/shopping-personalization';
 
 const route = useRoute();
 const router = useRouter();
@@ -822,6 +823,7 @@ function addCurrentToCart() {
   if (!cart) return;
   normalizeQuantity();
   addToCartComposable(cart.payload, selectedSku.value ? 0 : Number(quantity.value || minimumOrderQty.value), cart.skuDetails);
+  recordRecommendationEvent('add_to_cart', product.value, { source: 'product_detail', qty: Number(quantity.value || minimumOrderQty.value) });
   toast.success('Added to cart');
 }
 
@@ -830,6 +832,7 @@ function buyNow() {
   if (!cart) return;
   normalizeQuantity();
   addToCartComposable(cart.payload, selectedSku.value ? 0 : Number(quantity.value || minimumOrderQty.value), cart.skuDetails);
+  recordRecommendationEvent('buy_now', product.value, { source: 'product_detail', qty: Number(quantity.value || minimumOrderQty.value) });
   router.push('/shopping/cart');
 }
 
@@ -893,6 +896,7 @@ async function loadProduct() {
     activeDetailTab.value = 'overview';
     quantity.value = Math.max(1, Number(response.data?.minimumOrderQty || 1));
     normalizeQuantity();
+    recordRecommendationEvent('product_view', response.data, { source: 'product_detail' });
     await loadRelatedProducts();
   } catch (error) {
     console.error('Failed to load product', error);

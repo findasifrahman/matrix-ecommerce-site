@@ -92,6 +92,7 @@ import { Button, useToast } from '@matrix-ecommerce/ui';
 import { Search } from 'lucide-vue-next';
 import ProductCard from '@/components/shopping/ProductCard.vue';
 import { useShoppingCart } from '@/composables/useShoppingCart';
+import { recordProductIntent, recordRecommendationEvent } from '@/utils/shopping-personalization';
 
 const route = useRoute();
 const router = useRouter();
@@ -124,11 +125,13 @@ const paginationPages = computed(() => {
 });
 
 function openProduct(product: any) {
+  recordProductIntent(product);
   router.push({ name: 'product-detail', params: { externalId: product.externalId } });
 }
 
 function addProduct(product: any) {
   addToCart(product, 1);
+  recordRecommendationEvent('add_to_cart', product, { source: 'shop_card', qty: 1 });
   toast.success('Added to cart');
 }
 

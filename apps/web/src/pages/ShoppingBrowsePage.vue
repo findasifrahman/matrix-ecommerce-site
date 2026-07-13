@@ -109,7 +109,7 @@ import { Button, useToast } from '@matrix-ecommerce/ui';
 import { Search } from 'lucide-vue-next';
 import ProductCard from '@/components/shopping/ProductCard.vue';
 import { useShoppingCart } from '@/composables/useShoppingCart';
-import { recordCategoryIntent, recordProductIntent, recordSearchIntent } from '@/utils/shopping-personalization';
+import { recordCategoryIntent, recordProductIntent, recordRecommendationEvent, recordSearchIntent } from '@/utils/shopping-personalization';
 
 const route = useRoute();
 const router = useRouter();
@@ -200,6 +200,7 @@ function openProduct(product: any) {
 
 function addProduct(product: any) {
   addToCart(product, 1);
+  recordRecommendationEvent('add_to_cart', product, { source: 'browse_card', qty: 1 });
   toast.success('Added to cart');
 }
 
