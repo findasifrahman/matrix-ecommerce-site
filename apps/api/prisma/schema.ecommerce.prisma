@@ -37,6 +37,8 @@ model User {
   recommendationEvents   RecommendationEvent[]
   productRecommendations ProductRecommendation[]
   customerProfileNotes    CustomerProfile[]   @relation("CustomerProfileInternalNoteAuthor")
+  createdCoupons         Coupon[]
+  couponRedemptions      CouponRedemption[]
 
   @@index([email])
   @@index([phone])
@@ -72,6 +74,7 @@ model RefreshToken {
   user       User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
   @@index([user_id])
+  @@index([user_id, expires_at])
   @@index([expires_at])
   @@map("refresh_tokens")
 }
@@ -86,6 +89,7 @@ model AuthEmailOtp {
   created_at DateTime  @default(now())
 
   @@index([email, purpose])
+  @@index([email, purpose, consumed_at, created_at])
   @@index([expires_at])
   @@map("auth_email_otps")
 }
@@ -101,6 +105,7 @@ model AuthPhoneOtp {
   created_at  DateTime  @default(now())
 
   @@index([phone, purpose])
+  @@index([phone, purpose, consumed_at, created_at])
   @@index([expires_at])
   @@map("auth_phone_otps")
 }
@@ -114,6 +119,7 @@ model AuthOtpBlock {
   created_at    DateTime @default(now())
 
   @@index([channel, identifier])
+  @@index([channel, identifier, blocked_until])
   @@index([blocked_until])
   @@map("auth_otp_blocks")
 }
@@ -267,6 +273,7 @@ model BlogPost {
 
   @@index([status])
   @@index([published_at])
+  @@index([status, published_at, created_at])
   @@map("blog_posts")
 }
 
@@ -504,6 +511,7 @@ model Product {
   recommendationEvents RecommendationEvent[]
   productRecommendations ProductRecommendation[] @relation("RecommendedProduct")
   anchoredRecommendations ProductRecommendation[] @relation("AnchorProduct")
+  searchVector      ProductSearchVector?
 
   @@index([seller_id])
   @@index([category_id])
@@ -512,9 +520,16 @@ model Product {
   @@index([brand_model_id])
   @@index([product_type_id])
   @@index([status])
+  @@index([status, is_featured, created_at])
+  @@index([status, main_category_id, is_featured, created_at])
+  @@index([status, product_type_id, is_featured, created_at])
+  @@index([seller_id, status, created_at])
   @@index([rating])
   @@index([sku])
   @@index([source_kind])
+  @@index([source_kind, created_at])
+  @@index([external_id])
+  @@index([vendor_id])
   @@map("products")
 }
 
@@ -529,6 +544,7 @@ model ProductSearchVector {
   searchable_text String
   tokens          String[] @default([])
   updated_at      DateTime @updatedAt
+  product         Product  @relation(fields: [product_id], references: [id], onDelete: Cascade)
 
   @@index([main_category_id])
   @@index([category_id])
@@ -551,6 +567,7 @@ model SearchKeywordStat {
   updated_at       DateTime @updatedAt
 
   @@index([search_count, last_searched_at])
+  @@index([search_count, last_searched_at, last_result_count])
   @@index([last_searched_at])
   @@map("search_keyword_stats")
 }
@@ -597,6 +614,7 @@ model RecommendationModelVersion {
 
   @@index([name, created_at])
   @@index([status])
+  @@index([status, trained_at])
   @@map("recommendation_model_versions")
 }
 
@@ -618,6 +636,9 @@ model ProductRecommendation {
   product          Product  @relation("RecommendedProduct", fields: [product_id], references: [id], onDelete: Cascade)
 
   @@unique([model_version_id, subject_type, user_id, anchor_product_id, product_id])
+  @@index([model_version_id, subject_type, rank])
+  @@index([model_version_id, subject_type, user_id, rank])
+  @@index([model_version_id, subject_type, anchor_product_id, rank])
   @@index([subject_type, user_id, rank])
   @@index([subject_type, anchor_product_id, rank])
   @@index([product_id])
@@ -671,8 +692,11 @@ model CartItem {
   product           Product  @relation(fields: [product_id], references: [id], onDelete: Restrict)
   seller            User     @relation("CartItemSeller", fields: [seller_id], references: [id], onDelete: Restrict)
 
+  @@unique([cart_id, product_id])
   @@index([cart_id])
   @@index([seller_id])
+  @@index([seller_id, created_at])
+  @@index([created_at])
   @@map("cart_items")
 }
 
@@ -707,11 +731,16 @@ model Order {
   statusEvents        OrderStatusEvent[]
   paymentProofs       PaymentProof[]
   couponRedemption    CouponRedemption?
+  coupon              Coupon?            @relation(fields: [coupon_id], references: [id], onDelete: SetNull)
 
   @@index([user_id])
+  @@index([user_id, created_at])
   @@index([coupon_code])
+  @@index([coupon_id])
   @@index([status])
+  @@index([status, created_at])
   @@index([payment_status])
+  @@index([payment_status, created_at])
   @@index([created_at])
   @@map("orders")
 }
@@ -745,7 +774,9 @@ model OrderItem {
   seller            User      @relation("SellerOrderItems", fields: [seller_id], references: [id], onDelete: Restrict)
 
   @@index([order_id])
+  @@index([order_id, seller_status])
   @@index([seller_id])
+  @@index([seller_id, seller_status, created_at])
   @@index([seller_status])
   @@index([created_at])
   @@map("order_items")
@@ -760,6 +791,7 @@ model ShippingUpdate {
   order       Order    @relation(fields: [order_id], references: [id], onDelete: Cascade)
 
   @@index([order_id])
+  @@index([order_id, created_at])
   @@map("shipping_updates")
 }
 
@@ -775,6 +807,7 @@ model OrderStatusEvent {
   creator     User?    @relation("OrderStatusEventCreator", fields: [created_by], references: [id], onDelete: SetNull)
 
   @@index([order_id])
+  @@index([order_id, created_at])
   @@index([status_to])
   @@index([created_at])
   @@map("order_status_events")
@@ -798,7 +831,9 @@ model PaymentProof {
   submitter    User?      @relation("PaymentProofSubmitter", fields: [submitted_by], references: [id], onDelete: SetNull)
 
   @@index([order_id])
+  @@index([order_id, created_at])
   @@index([status])
+  @@index([status, created_at])
   @@map("payment_proofs")
 }
 
@@ -822,9 +857,11 @@ model Coupon {
   created_at          DateTime           @default(now())
   updated_at          DateTime           @updatedAt
   redemptions         CouponRedemption[]
+  orders              Order[]
+  creator             User?              @relation(fields: [created_by], references: [id], onDelete: SetNull)
 
-  @@index([code])
   @@index([is_active])
+  @@index([is_active, starts_at, ends_at])
   @@index([starts_at])
   @@index([ends_at])
   @@map("coupons")
@@ -840,8 +877,10 @@ model CouponRedemption {
   created_at      DateTime @default(now())
   coupon          Coupon   @relation(fields: [coupon_id], references: [id], onDelete: Restrict)
   order           Order    @relation(fields: [order_id], references: [id], onDelete: Cascade)
+  user            User     @relation(fields: [user_id], references: [id], onDelete: Restrict)
 
   @@index([coupon_id])
+  @@index([coupon_id, user_id])
   @@index([user_id])
   @@index([coupon_code])
   @@map("coupon_redemptions")

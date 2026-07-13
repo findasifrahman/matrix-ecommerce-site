@@ -25,15 +25,6 @@ if (process.env.NODE_ENV !== 'production') {
   globalThis.__prisma = prisma;
 }
 
-// Graceful shutdown - properly disconnect on process termination
-const gracefulShutdown = async () => {
-  await prisma.$disconnect();
-};
-
-process.on('beforeExit', gracefulShutdown);
-process.on('SIGINT', gracefulShutdown);
-process.on('SIGTERM', gracefulShutdown);
-
 export default prisma;
 
 

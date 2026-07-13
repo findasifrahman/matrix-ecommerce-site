@@ -19,6 +19,7 @@
     "db:patch:phone-otp": "prisma db execute --schema=prisma/schema.ecommerce.prisma --file prisma/migrations/20260626160000_add_phone_otps/migration.sql",
     "db:patch:search-translations": "prisma db execute --schema=prisma/schema.ecommerce.prisma --file prisma/migrations/20260628110000_add_external_search_result_items/migration.sql",
     "db:patch:product-category-nullable": "prisma db execute --schema=prisma/schema.ecommerce.prisma --file prisma/migrations/20260707142000_make_products_category_nullable/migration.sql",
+    "db:patch:query-optimization": "prisma db execute --schema=prisma/schema.ecommerce.prisma --file prisma/migrations/20260713120000_database_query_optimization/migration.sql",
     "db:patch:prod": "pnpm db:patch:snapshots && pnpm db:patch:auth-email && pnpm db:patch:coupons && pnpm db:patch:tmapi && pnpm db:patch:phone-otp && pnpm db:patch:search-translations && pnpm db:patch:product-category-nullable",
     "db:push": "prisma db push --schema=prisma/schema.ecommerce.prisma",
     "db:push:deploy": "prisma db push --schema=prisma/schema.ecommerce.prisma --skip-generate",

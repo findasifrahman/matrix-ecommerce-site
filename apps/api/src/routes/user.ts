@@ -511,25 +511,21 @@ export default async function userRoutes(fastify: FastifyInstance) {
       create: { user_id: req.user.id },
     });
 
-    const existing = await prisma.cartItem.findFirst({
-      where: { cart_id: cart.id, product_id: product.id },
-    });
-
-    if (existing) {
-      return prisma.cartItem.update({
-        where: { id: existing.id },
-        data: {
-          qty: existing.qty + body.qty,
-          price_snapshot: product.price,
-          currency_snapshot: product.currency,
-          title_snapshot: product.title,
-          seller_id: product.seller_id,
+    return prisma.cartItem.upsert({
+      where: {
+        cart_id_product_id: {
+          cart_id: cart.id,
+          product_id: product.id,
         },
-      });
-    }
-
-    return prisma.cartItem.create({
-      data: {
+      },
+      update: {
+        qty: { increment: body.qty },
+        price_snapshot: product.price,
+        currency_snapshot: product.currency,
+        title_snapshot: product.title,
+        seller_id: product.seller_id,
+      },
+      create: {
         cart_id: cart.id,
         product_id: product.id,
         seller_id: product.seller_id,

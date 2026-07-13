@@ -257,6 +257,25 @@ async function loadLocalCards(products: any[]) {
   return products.map((product) => normalizeLocalCard(product, mediaById));
 }
 
+async function findProductCardsForHomepage(where: any, limit: number) {
+  const products = await prisma.product.findMany({
+    where,
+    include: {
+      coverAsset: true,
+      seller: { include: { sellerProfile: true } },
+      category: true,
+      mainCategory: true,
+      taxonomyBrand: true,
+      brandModel: true,
+      productType: true,
+    },
+    orderBy: [{ is_featured: 'desc' }, { created_at: 'desc' }],
+    take: Math.max(1, Math.min(24, limit)),
+  });
+
+  return loadLocalCards(products);
+}
+
 export async function getCategories() {
   return prisma.mainCategory.findMany({
     where: { is_active: true },
@@ -651,12 +670,8 @@ export async function getHomepageCollections(): Promise<Array<{
     const productTypeId: string | undefined = config.productTypeSlug ? productTypeIdBySlug.get(config.productTypeSlug) : undefined;
     if (config.productTypeSlug && !productTypeId) return null;
 
-    const result = await searchByKeyword(keyword, {
-      page: 1,
-      pageSize: config.limit,
-      productTypeId,
-    });
-    if (!result.items.length) return null;
+    const items = await findProductCardsForHomepage(buildSearchWhere(keyword, { productTypeId }), config.limit);
+    if (!items.length) return null;
 
     return {
       key: config.key,
@@ -665,7 +680,7 @@ export async function getHomepageCollections(): Promise<Array<{
       searchKeyword: keyword,
       imageUrl: primary?.image_url || undefined,
       imageAlt: primary?.image_alt || primary?.title || config.label,
-      items: result.items.slice(0, config.limit),
+      items,
       sortOrder: primary?.section_sort_order ?? config.sortOrder,
     };
   }));
@@ -747,11 +762,8 @@ export async function getHotProductsFromSearchKeywords(limit = 6): Promise<{ key
   const seen = new Set<string>();
 
   for (const term of keywords) {
-    const result = await searchByKeyword(term, {
-      page: 1,
-      pageSize: limit,
-    });
-    for (const item of result.items) {
+    const cards = await findProductCardsForHomepage(buildSearchWhere(term), limit);
+    for (const item of cards) {
       const key = String(item.externalId || item.id || '').trim();
       if (!key || seen.has(key)) continue;
       seen.add(key);

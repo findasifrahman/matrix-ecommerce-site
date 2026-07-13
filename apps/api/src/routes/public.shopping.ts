@@ -296,18 +296,6 @@ export default async function publicShoppingRoutes(fastify: FastifyInstance) {
   });
 
   fastify.get('/shipping-charges', async () => {
-    const defaults = [
-      { delivery_area: 'inside_dhaka', cost: 50, per_kg_charge: 30, is_active: true },
-      { delivery_area: 'outside_dhaka', cost: 100, per_kg_charge: 30, is_active: true },
-    ] as const;
-    for (const row of defaults) {
-      await prisma.shippingCharge.upsert({
-        where: { delivery_area: row.delivery_area },
-        update: {},
-        create: row,
-      });
-    }
-
     return prisma.shippingCharge.findMany({
       where: { is_active: true, delivery_area: { in: ['inside_dhaka', 'outside_dhaka'] } },
       orderBy: [{ delivery_area: 'asc' }],
