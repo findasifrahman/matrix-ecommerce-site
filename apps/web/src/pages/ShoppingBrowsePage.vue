@@ -1,6 +1,7 @@
 <template>
   <div class="min-h-screen bg-[#eef3f9] text-slate-700">
     <main class="mx-auto max-w-[1600px] px-3 py-4 sm:px-4 lg:px-6">
+      <!--
       <section class="rounded-[28px] border border-slate-200 bg-white p-5 shadow-[0_16px_38px_rgba(15,23,42,0.05)]">
         <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div>
@@ -36,6 +37,7 @@
           </button>
         </div>
       </section>
+    -->
 
       <section class="mt-6 rounded-[28px] border border-slate-200 bg-white p-5 shadow-[0_16px_38px_rgba(15,23,42,0.05)]">
         <div class="flex items-center justify-between gap-3">
@@ -131,7 +133,7 @@ const selectedVendorId = ref(String(route.query.vendorId || ''));
 
 const heading = computed(() => {
   if (selectedVendorId.value) return `Products from vendor ${selectedVendorId.value}`;
-  if (searchQuery.value.trim()) return `Search results for "${searchQuery.value.trim()}"`;
+  if (searchQuery.value.trim()) return `Search Results`;
   if (selectedBrandModelId.value) return 'Accessories for selected model';
   if (selectedBrandId.value) return 'Accessories for selected brand';
   if (selectedProductTypeId.value) return 'Selected product type';
