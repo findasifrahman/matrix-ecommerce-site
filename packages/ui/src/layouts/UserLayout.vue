@@ -4,7 +4,7 @@
     <aside class="hidden lg:block w-64 bg-teal-600 border-r border-teal-700 fixed h-screen overflow-y-auto">
       <div class="p-4 border-b border-teal-700">
         <router-link to="/" class="flex items-center space-x-2 mb-2">
-          <span class="text-xl font-bold text-white">BridgeChina</span>
+          <span class="text-xl font-bold text-white">MatrixShop</span>
         </router-link>
         <h2 class="text-sm font-semibold text-teal-100">User Dashboard</h2>
       </div>
