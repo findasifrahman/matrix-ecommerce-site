@@ -67,7 +67,14 @@ const whatsAppUrl = 'https://wa.me/8801735494275';
 @media (max-width: 640px) {
   .whatsapp-sticky-button {
     right: 0.75rem;
-    bottom: 0.75rem;
+    bottom: 5rem;
+    width: 3.1rem;
+    height: 3.1rem;
+  }
+
+  .whatsapp-sticky-button__icon {
+    width: 1.65rem;
+    height: 1.65rem;
   }
 }
 </style>

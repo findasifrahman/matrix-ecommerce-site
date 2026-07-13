@@ -1,6 +1,6 @@
 <template>
   <div class="min-h-screen bg-[#eef3f9] text-slate-700">
-    <main class="mx-auto max-w-[1600px] px-3 py-4 sm:px-4 lg:px-6">
+    <main class="mx-auto max-w-[1600px] px-2 py-3 pb-20 sm:px-4 sm:py-4 lg:px-6">
       <!--
       <section class="rounded-[28px] border border-slate-200 bg-white p-5 shadow-[0_16px_38px_rgba(15,23,42,0.05)]">
         <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
@@ -39,7 +39,7 @@
       </section>
     -->
 
-      <section class="mt-6 rounded-[28px] border border-slate-200 bg-white p-5 shadow-[0_16px_38px_rgba(15,23,42,0.05)]">
+      <section class="mt-4 rounded-[22px] border border-slate-200 bg-white p-3 shadow-[0_16px_38px_rgba(15,23,42,0.05)] sm:mt-6 sm:rounded-[28px] sm:p-5">
         <div class="flex items-center justify-between gap-3">
           <div>
             <p class="text-[10px] font-bold uppercase tracking-[0.3em] text-slate-400">Results</p>
@@ -50,11 +50,11 @@
           <span class="rounded-full bg-rose-50 px-3 py-1 text-[10px] font-semibold text-rose-700">{{ totalCount }} items</span>
         </div>
 
-        <div v-if="loading" class="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          <div v-for="i in 8" :key="i" class="h-80 animate-pulse rounded-[24px] bg-slate-100" />
+        <div v-if="loading" class="mt-4 grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
+          <div v-for="i in 8" :key="i" class="h-56 animate-pulse rounded-[18px] bg-slate-100 sm:h-80 sm:rounded-[24px]" />
         </div>
 
-        <div v-else-if="products.length > 0" class="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <div v-else-if="products.length > 0" class="mt-4 grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
           <ProductCard
             v-for="product in products"
             :key="product.externalId"

@@ -1,8 +1,8 @@
 <template>
   <div class="min-h-screen bg-[#eef3f9] text-slate-700">
-    <main class="w-full pb-16">
+    <main class="w-full pb-20 md:pb-16">
       <section class="w-full overflow-hidden bg-[#dfe8e2] shadow-[0_24px_80px_rgba(15,23,42,0.12)]">
-        <div class="relative min-h-[520px] overflow-hidden">
+        <div class="relative min-h-[360px] overflow-hidden sm:min-h-[520px]">
           <Transition name="hero-fade" mode="out-in">
             <div
               :key="`hero-mobile-${activeHeroIndex}`"
@@ -19,12 +19,12 @@
           </Transition>
           <div class="absolute inset-0 bg-[radial-gradient(circle_at_18%_18%,rgba(255,255,255,0.88),transparent_34%),linear-gradient(110deg,rgba(255,255,255,0.82),rgba(255,255,255,0.38)_68%)] lg:bg-[radial-gradient(circle_at_18%_18%,rgba(255,255,255,0.85),transparent_34%),linear-gradient(110deg,rgba(255,255,255,0.72),rgba(255,255,255,0)_68%)]" />
 
-          <div class="relative grid min-h-[520px] items-center gap-8 px-4 py-8 sm:px-8 lg:grid-cols-[minmax(0,640px)_1fr] lg:px-14 xl:px-20">
-            <div class="space-y-5">
+          <div class="relative grid min-h-[360px] items-center gap-5 px-3 py-5 sm:min-h-[520px] sm:px-8 sm:py-8 lg:grid-cols-[minmax(0,640px)_1fr] lg:px-14 xl:px-20">
+            <div class="space-y-4 sm:space-y-5">
               <p class="text-[10px] font-bold uppercase tracking-[0.4em] text-orange-600">Matrix Shop</p>
               <Transition name="hero-content" mode="out-in">
                 <div :key="`hero-copy-${activeHeroIndex}`" class="space-y-3">
-                  <h1 class="max-w-3xl text-4xl font-black tracking-tight text-slate-950 sm:text-6xl">
+                  <h1 class="max-w-3xl text-3xl font-black tracking-tight text-slate-950 sm:text-6xl">
                     {{ activeHeroTitle }}
                   </h1>
                   <p class="max-w-2xl text-sm leading-6 text-slate-600 sm:text-base">
@@ -33,17 +33,17 @@
                 </div>
               </Transition>
 
-              <div class="rounded-[28px] border border-white/80 bg-white/86 p-4 shadow-[0_16px_36px_rgba(15,23,42,0.08)] backdrop-blur lg:max-w-3xl">
+              <div class="rounded-[22px] border border-white/80 bg-white/90 p-3 shadow-[0_16px_36px_rgba(15,23,42,0.08)] backdrop-blur sm:rounded-[28px] sm:p-4 lg:max-w-3xl">
                 <div class="flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
                   <p class="text-[10px] font-bold uppercase tracking-[0.28em] text-slate-400">Find Accessories By Brand</p>
                   <Button type="button" variant="ghost" class="h-10 rounded-full px-4 text-xs font-semibold uppercase tracking-[0.12em]" @click="openBrowse">
                     Browse all
                   </Button>
                 </div>
-                <div class="mt-3 grid gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto]">
+                <div class="mt-3 grid gap-2 sm:gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto]">
                   <select
                     v-model="mobileBrandId"
-                    class="h-12 rounded-2xl border border-slate-200 bg-white px-4 text-sm font-medium text-slate-900 outline-none focus:border-orange-300"
+                    class="h-11 rounded-2xl border border-slate-200 bg-white px-3 text-sm font-medium text-slate-900 outline-none focus:border-orange-300 sm:h-12 sm:px-4"
                   >
                     <option value="">My Brand</option>
                     <option v-for="brand in mobileBrandOptions" :key="brand.id" :value="brand.id">
@@ -53,14 +53,14 @@
                   <select
                     v-model="mobileBrandModelId"
                     :disabled="!mobileBrandId"
-                    class="h-12 rounded-2xl border border-slate-200 bg-white px-4 text-sm font-medium text-slate-900 outline-none focus:border-orange-300 disabled:bg-slate-100 disabled:text-slate-400"
+                    class="h-11 rounded-2xl border border-slate-200 bg-white px-3 text-sm font-medium text-slate-900 outline-none focus:border-orange-300 disabled:bg-slate-100 disabled:text-slate-400 sm:h-12 sm:px-4"
                   >
                     <option value="">My Model</option>
                     <option v-for="model in mobileBrandModelOptions" :key="model.id" :value="model.id">
                       {{ model.name }}
                     </option>
                   </select>
-                  <Button type="button" variant="primary" class="h-12 rounded-full bg-orange-600 px-6 hover:bg-orange-700" @click="openMobileBrandBrowse">
+                  <Button type="button" variant="primary" class="h-11 rounded-full bg-orange-600 px-5 hover:bg-orange-700 sm:h-12 sm:px-6" @click="openMobileBrandBrowse">
                     See cases
                   </Button>
                 </div>
@@ -94,7 +94,7 @@
         </div>
       </section>
 
-      <section class="-mt-6 w-full overflow-hidden border-y border-white/80 bg-white/92 p-4 shadow-[0_20px_60px_rgba(15,23,42,0.08)] backdrop-blur">
+      <section class="-mt-4 w-full overflow-hidden border-y border-white/80 bg-white/92 p-3 shadow-[0_20px_60px_rgba(15,23,42,0.08)] backdrop-blur sm:-mt-6 sm:p-4">
         <div class="flex items-center justify-between gap-3">
           <div>
             <p class="text-[10px] font-bold uppercase tracking-[0.35em] text-slate-400">Quick menu</p>
@@ -132,6 +132,7 @@
       </section>
 
       <section
+        id="offers"
         v-if="hotDeals.length > 0"
         class="mt-6 w-full border-y border-slate-200 bg-white p-5 shadow-[0_16px_38px_rgba(15,23,42,0.05)]"
       >
@@ -143,7 +144,7 @@
           <Button variant="ghost" size="sm" @click="openBrowse">Browse more</Button>
         </div>
 
-        <div class="mt-4 grid gap-4 lg:grid-cols-2">
+        <div class="mt-4 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-2">
           <ProductCard
             v-for="product in hotDeals.slice(0, 2)"
             :key="product.externalId"
@@ -165,7 +166,7 @@
           <Button variant="ghost" size="sm" @click="openBrowse">Browse more</Button>
         </div>
 
-        <div class="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <div class="mt-4 grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
           <ProductCard
             v-for="product in recommendedItems.slice(0, 8)"
             :key="product.externalId"
@@ -191,7 +192,7 @@
           <Button variant="ghost" size="sm" @click="openBrowse">Browse more</Button>
         </div>
 
-        <div class="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-6">
+        <div class="mt-4 grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-6">
           <ProductCard
             v-for="product in hotProducts.slice(0, 6)"
             :key="`hot-${product.externalId}`"
@@ -228,7 +229,7 @@
           <Button variant="ghost" size="sm" @click="openKeyword(section.searchKeyword || section.title)">Browse more</Button>
         </div>
 
-        <div class="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <div class="mt-4 grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
           <ProductCard
             v-for="product in section.items"
             :key="`${section.key}-${product.externalId}`"
@@ -244,7 +245,7 @@
 
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
-import { useRouter } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import axios from '@/utils/axios';
 import { Button, useToast } from '@matrix-ecommerce/ui';
 import ProductCard from '@/components/shopping/ProductCard.vue';
@@ -253,6 +254,7 @@ import { getYouMayLikeProducts, recordMenuIntent, recordProductIntent, recordRec
 import { useSeo } from '@/utils/seo';
 
 const router = useRouter();
+const route = useRoute();
 const toast = useToast();
 const { addToCart } = useShoppingCart();
 
@@ -513,7 +515,21 @@ async function loadHomepage() {
     loadHomepageCollections(),
   ]);
   startHeroRotation();
+  if (String(route.query.section || '') === 'offers') {
+    window.requestAnimationFrame(() => {
+      document.getElementById('offers')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  }
 }
+
+watch(
+  () => route.query.section,
+  (section) => {
+    if (String(section || '') === 'offers') {
+      document.getElementById('offers')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  },
+);
 
 onMounted(loadHomepage);
 

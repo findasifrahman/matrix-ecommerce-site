@@ -1,6 +1,6 @@
 <template>
   <Card
-    class="group cursor-pointer overflow-hidden rounded-[24px] border border-slate-200 bg-white shadow-[0_14px_34px_rgba(15,23,42,0.06)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_24px_54px_rgba(15,23,42,0.12)]"
+    class="group cursor-pointer overflow-hidden rounded-[16px] border border-slate-200 bg-white shadow-[0_8px_22px_rgba(15,23,42,0.06)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_24px_54px_rgba(15,23,42,0.12)] sm:rounded-[24px] sm:shadow-[0_14px_34px_rgba(15,23,42,0.06)]"
     @click="$emit('click', product)"
   >
     <div class="relative aspect-square overflow-hidden bg-slate-100">
@@ -12,9 +12,9 @@
         @error="imageFailed = true"
       />
       <div v-else class="flex h-full w-full items-center justify-center text-slate-400">
-        <Package class="h-14 w-14" />
+        <Package class="h-9 w-9 sm:h-14 sm:w-14" />
       </div>
-      <div class="absolute inset-0 flex items-center justify-center bg-black/0 opacity-0 transition-all duration-300 group-hover:bg-black/40 group-hover:opacity-100">
+      <div class="absolute inset-0 hidden items-center justify-center bg-black/0 opacity-0 transition-all duration-300 group-hover:bg-black/40 group-hover:opacity-100 sm:flex">
         <div class="flex gap-2">
           <Button
             variant="primary"
@@ -38,9 +38,9 @@
       </div>
     </div>
 
-    <CardBody class="p-4">
-      <h3 class="mb-1 min-h-[2.2rem] text-sm font-semibold leading-5 text-slate-900 line-clamp-2">{{ product.title }}</h3>
-      <div class="mb-2 flex items-center gap-2 text-xs text-slate-500">
+    <CardBody class="p-2.5 sm:p-4">
+      <h3 class="mb-1 min-h-[2.1rem] text-[12px] font-semibold leading-[1.05rem] text-slate-900 line-clamp-2 sm:min-h-[2.2rem] sm:text-sm sm:leading-5">{{ product.title }}</h3>
+      <div class="mb-1.5 hidden items-center gap-2 text-xs text-slate-500 sm:flex">
         <div class="flex items-center gap-1 text-amber-500">
           <Star
             v-for="index in 5"
@@ -54,21 +54,29 @@
       </div>
       <div class="flex items-end justify-between gap-2">
         <div class="min-w-0">
-          <span class="text-base font-black text-rose-600">
+          <span class="text-[13px] font-black leading-tight text-rose-600 sm:text-base">
             <span v-if="product.priceMin !== undefined && product.priceMax !== undefined">
               {{ formatPrice(product.priceMin) }}{{ product.priceMin !== product.priceMax ? ' - ' + formatPrice(product.priceMax) : '' }}
             </span>
             <span v-else-if="product.priceMin !== undefined">{{ formatPrice(product.priceMin) }}</span>
             <span v-else class="text-sm text-slate-500">Price on request</span>
           </span>
-          <div v-if="showOriginalPrice" class="mt-1 text-xs text-slate-400 line-through">
+          <div v-if="showOriginalPrice" class="mt-0.5 text-[10px] text-slate-400 line-through sm:mt-1 sm:text-xs">
             {{ formatPrice(Number(product.originalPrice || 0)) }}
           </div>
         </div>
-        <span v-if="product.vendorScore" class="rounded-full bg-teal-50 px-2.5 py-1 text-xs font-semibold text-teal-700">
+        <span v-if="product.vendorScore" class="hidden rounded-full bg-teal-50 px-2.5 py-1 text-xs font-semibold text-teal-700 sm:inline-flex">
           * {{ Number(product.vendorScore).toFixed(1) }}
         </span>
       </div>
+      <button
+        type="button"
+        class="mt-2 flex w-full items-center justify-center rounded-xl bg-slate-950 px-2 py-1.5 text-[11px] font-bold text-white shadow-sm sm:hidden"
+        @click.stop="emitAddToCart"
+      >
+        <Plus class="mr-1 h-3.5 w-3.5" />
+        Add
+      </button>
     </CardBody>
   </Card>
 </template>

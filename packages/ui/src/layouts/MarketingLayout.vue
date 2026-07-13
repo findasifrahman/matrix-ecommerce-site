@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen [overflow-x:clip] bg-[linear-gradient(90deg,#f8fafc_0%,#ffffff_28%,#ffffff_100%)] text-slate-900 lg:pt-14">
+  <div class="min-h-screen [overflow-x:clip] bg-[linear-gradient(90deg,#f8fafc_0%,#ffffff_28%,#ffffff_100%)] pb-16 text-slate-900 lg:pb-0 lg:pt-14">
 
     <!-- Drawer backdrop -->
     <Transition name="overlay-fade">
@@ -158,14 +158,14 @@
     </div>
 
     <!-- ── Navbar ────────────────────────────────────────── -->
-    <header class="sticky top-0 z-50 border-b border-white/10 bg-slate-950 text-white lg:fixed lg:left-0 lg:right-0 lg:top-0">
+    <header class="sticky top-0 z-50 border-b border-slate-200 bg-white/95 text-slate-900 shadow-[0_6px_18px_rgba(15,23,42,0.08)] backdrop-blur lg:fixed lg:left-0 lg:right-0 lg:top-0 lg:border-white/10 lg:bg-slate-950 lg:text-white">
       <div class="px-2 sm:px-3">
-        <div class="flex h-14 items-center gap-1.5 sm:gap-2">
+        <div class="flex h-12 items-center gap-1.5 sm:h-14 sm:gap-2">
 
           <!-- Hamburger (always visible on all screen sizes) -->
           <button
             type="button"
-            class="inline-flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl text-white/85 transition-colors hover:bg-white/10 hover:text-white"
+            class="inline-flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl text-slate-800 transition-colors hover:bg-slate-100 hover:text-slate-950 sm:h-10 sm:w-10 lg:text-white/85 lg:hover:bg-white/10 lg:hover:text-white"
             @click="drawerOpen = !drawerOpen"
             aria-label="Open category menu"
           >
@@ -177,29 +177,29 @@
             <img
               src="/logo_verticle.png"
               alt="MatrixShop"
-              class="h-7 w-7 rounded-xl object-contain shadow-[0_6px_16px_rgba(0,0,0,0.26)] ring-1 ring-white/10 sm:h-8 sm:w-8"
+              class="h-8 w-8 rounded-xl object-contain shadow-[0_6px_16px_rgba(15,23,42,0.16)] ring-1 ring-slate-200 sm:h-8 sm:w-8 lg:ring-white/10"
             />
             <div class="hidden min-w-0 leading-tight sm:block">
-              <p class="truncate text-[14px] font-black tracking-tight text-white">MatrixShop</p>
-              <p class="truncate text-[10px] font-medium text-white/65">Premium smart shopping</p>
+              <p class="truncate text-[14px] font-black tracking-tight text-slate-950 lg:text-white">MatrixShop</p>
+              <p class="truncate text-[10px] font-medium text-slate-500 lg:text-white/65">Premium smart shopping</p>
             </div>
           </router-link>
 
           <!-- Search bar -->
           <form class="flex min-w-0 flex-1" @submit.prevent="submitSearch">
-            <div class="flex h-10 w-full min-w-0 items-center overflow-hidden rounded-full border border-white/30 bg-white/10 shadow-[0_4px_14px_rgba(0,0,0,0.18)] focus-within:border-rose-400/70 focus-within:ring-1 focus-within:ring-rose-300/25">
-              <span class="pl-3 text-white/65 sm:pl-4">
+            <div class="flex h-9 w-full min-w-0 items-center overflow-hidden rounded-full border border-slate-200 bg-slate-50 shadow-inner focus-within:border-teal-400 focus-within:bg-white focus-within:ring-2 focus-within:ring-teal-100 sm:h-10 lg:border-white/30 lg:bg-white/10 lg:shadow-[0_4px_14px_rgba(0,0,0,0.18)] lg:focus-within:border-rose-400/70 lg:focus-within:ring-rose-300/25">
+              <span class="pl-3 text-slate-500 sm:pl-4 lg:text-white/65">
                 <Search class="h-4 w-4" />
               </span>
               <input
                 v-model="searchQuery"
                 type="search"
                 placeholder="Search products..."
-                class="min-w-0 flex-1 bg-transparent px-2 text-[12px] font-medium text-white placeholder:text-white/55 focus:outline-none sm:px-3 md:placeholder:text-white/55"
+                class="min-w-0 flex-1 bg-transparent px-2 text-[12px] font-medium text-slate-900 placeholder:text-slate-400 focus:outline-none sm:px-3 lg:text-white lg:placeholder:text-white/55"
               />
               <button
                 type="submit"
-                class="mr-1 inline-flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-white/12 text-white/70 transition-colors hover:bg-rose-500/20 hover:text-rose-200"
+                class="mr-1 inline-flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-slate-700 text-white transition-colors hover:bg-slate-800 lg:bg-white/12 lg:text-white/70 lg:hover:bg-rose-500/20 lg:hover:text-rose-200"
                 title="Search"
               >
                 <Search class="h-4 w-4" />
@@ -319,6 +319,21 @@
         </div>
       </footer>
     </main>
+
+    <nav class="fixed inset-x-0 bottom-0 z-[70] border-t border-white/15 bg-[#075985] px-2 pb-[env(safe-area-inset-bottom)] text-white shadow-[0_-10px_30px_rgba(15,23,42,0.24)] md:hidden" aria-label="Mobile bottom navigation">
+      <div class="mx-auto grid h-16 max-w-md grid-cols-4">
+        <router-link
+          v-for="item in mobileBottomNav"
+          :key="item.label"
+          :to="item.to"
+          class="flex min-w-0 flex-col items-center justify-center gap-1 rounded-2xl text-[10px] font-semibold text-white/85 transition-colors hover:bg-white/10 hover:text-white"
+          :class="isBottomNavActive(item) ? 'text-yellow-300' : ''"
+        >
+          <component :is="item.icon" class="h-5 w-5" />
+          <span class="truncate">{{ item.label }}</span>
+        </router-link>
+      </div>
+    </nav>
   </div>
 </template>
 
@@ -335,7 +350,7 @@
 
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
-import { useRouter } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import Button from '../components/Button.vue';
 import {
   ArrowRight,
@@ -369,6 +384,9 @@ import {
   BookOpen,
   Sprout,
   BadgePercent,
+  Grid3X3,
+  Gift,
+  ShoppingCart,
 } from 'lucide-vue-next';
 
 const props = defineProps<{
@@ -381,12 +399,25 @@ defineEmits<{
 }>();
 
 const router = useRouter();
+const route = useRoute();
 const searchQuery = ref('');
 const categories = ref<any[]>([]);
 const expandedCategorySlug = ref('');
 const drawerOpen = ref(false);
 
 const userRoles = computed(() => props.userRoles || []);
+
+const mobileBottomNav = [
+  { label: 'Home', to: '/shopping', icon: Home, match: ['/shopping'] },
+  { label: 'Categories', to: '/shopping/browse', icon: Grid3X3, match: ['/shopping/browse'] },
+  { label: 'Cart', to: '/shopping/cart', icon: ShoppingCart, match: ['/shopping/cart', '/shopping/checkout'] },
+  { label: 'Offers', to: '/shopping?section=offers', icon: Gift, match: ['offers'] },
+];
+
+function isBottomNavActive(item: any) {
+  if (item.label === 'Offers') return String(route.query.section || '') === 'offers';
+  return item.match.some((path: string) => route.path === path);
+}
 
 const iconMap: Record<string, any> = {
   'shopping-bag': ShoppingBag,
