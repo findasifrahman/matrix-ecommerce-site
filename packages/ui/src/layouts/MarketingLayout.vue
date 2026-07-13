@@ -385,8 +385,8 @@ import {
   Sprout,
   BadgePercent,
   Grid3X3,
-  Gift,
   ShoppingCart,
+  User,
 } from 'lucide-vue-next';
 
 const props = defineProps<{
@@ -411,11 +411,10 @@ const mobileBottomNav = [
   { label: 'Home', to: '/shopping', icon: Home, match: ['/shopping'] },
   { label: 'Categories', to: '/shopping/browse', icon: Grid3X3, match: ['/shopping/browse'] },
   { label: 'Cart', to: '/shopping/cart', icon: ShoppingCart, match: ['/shopping/cart', '/shopping/checkout'] },
-  { label: 'Offers', to: '/shopping?section=offers', icon: Gift, match: ['offers'] },
+  { label: 'Sign in', to: '/login', icon: User, match: ['/login', '/register'] },
 ];
 
 function isBottomNavActive(item: any) {
-  if (item.label === 'Offers') return String(route.query.section || '') === 'offers';
   return item.match.some((path: string) => route.path === path);
 }
 
