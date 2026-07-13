@@ -421,8 +421,14 @@ async function loadHotDeals() {
   }
 }
 
-function loadRecommended() {
-  recommendedItems.value = getYouMayLikeProducts(8);
+async function loadRecommended() {
+  try {
+    const response = await axios.get('/api/public/recommendations/global', { params: { limit: 8 } });
+    const modelItems = Array.isArray(response.data?.items) ? response.data.items : [];
+    recommendedItems.value = modelItems.length > 0 ? modelItems : getYouMayLikeProducts(8);
+  } catch {
+    recommendedItems.value = getYouMayLikeProducts(8);
+  }
 }
 
 async function loadHotProducts() {
@@ -497,8 +503,8 @@ function addProduct(product: any) {
 }
 
 async function loadHomepage() {
-  loadRecommended();
   await Promise.all([
+    loadRecommended(),
     loadHeroBanners(),
     loadStorefrontTaxonomy(),
     loadVisualMenu(),
