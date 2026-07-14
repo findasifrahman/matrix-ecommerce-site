@@ -16,8 +16,8 @@
             <div class="w-full max-w-3xl space-y-4 sm:space-y-5">
               <h1 class="text-[16px] font-bold uppercase tracking-[0.4em] text-orange-600">Matrix Shop</h1>
 
-              <div class="rounded-[22px] border border-white/80 bg-white/90 p-3 shadow-[0_16px_36px_rgba(15,23,42,0.08)] backdrop-blur sm:rounded-[28px] sm:p-4">
-                <div class="grid gap-2 sm:gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto]">
+              <div class="w-full max-w-[420px] rounded-[22px] border border-white/80 bg-white/90 p-3 shadow-[0_16px_36px_rgba(15,23,42,0.08)] backdrop-blur sm:rounded-[28px] sm:p-4">
+                <div class="grid gap-2 sm:gap-3">
                   <select
                     v-model="mobileBrandId"
                     class="h-11 rounded-2xl border border-slate-200 bg-white px-3 text-sm font-medium text-slate-900 outline-none focus:border-orange-300 sm:h-12 sm:px-4"
