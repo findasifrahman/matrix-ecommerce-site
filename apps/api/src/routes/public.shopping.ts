@@ -55,21 +55,62 @@ const getRecommendationSchema = z.object({
   limit: z.coerce.number().int().min(1).max(24).default(12),
 });
 
-function recommendationProductCard(row: any) {
+function recommendationGalleryAssetIds(product: any): string[] {
+  return Array.isArray(product?.gallery_asset_ids)
+    ? product.gallery_asset_ids.filter((id: any) => typeof id === 'string' && id.trim().length > 0)
+    : [];
+}
+
+function recommendationProductImages(product: any, mediaById: Map<string, any> = new Map()): string[] {
+  const coverUrl = product.coverAsset?.public_url || product.coverAsset?.thumbnail_url || null;
+  const galleryUrls = recommendationGalleryAssetIds(product)
+    .map((id) => mediaById.get(id))
+    .filter(Boolean)
+    .map((asset) => asset.public_url || asset.thumbnail_url)
+    .filter(Boolean);
+
+  return Array.from(new Set([coverUrl, ...galleryUrls].filter(Boolean)));
+}
+
+function recommendationProductCard(row: any, mediaById: Map<string, any> = new Map()) {
   const product = row.product;
+  const images = recommendationProductImages(product, mediaById);
   return {
+    source: 'matrix_ecommerce',
     id: product.id,
     externalId: product.external_id || product.id,
     title: product.title,
-    priceMin: product.price,
-    priceMax: product.original_price || product.price,
+    priceMin: Number(product.price || 0),
+    priceMax: Number(product.price || 0),
+    originalPrice: product.original_price !== null && product.original_price !== undefined
+      ? Number(product.original_price)
+      : undefined,
     currency: product.currency,
-    imageUrl: product.coverAsset?.thumbnail_url || product.coverAsset?.public_url || null,
+    imageUrl: images[0],
+    images: images.length > 0 ? images : undefined,
+    rating: product.rating !== null && product.rating !== undefined ? Number(product.rating) : undefined,
+    ratingCount: product.review_count !== null && product.review_count !== undefined ? Number(product.review_count) : 0,
     sku: product.sku,
+    minimumOrderQty: Number(product.minimum_order_qty || 1),
     score: row.score,
     rank: row.rank,
     reason: row.reason,
   };
+}
+
+async function recommendationMediaLookup(rows: any[]): Promise<Map<string, any>> {
+  const galleryIds = Array.from(new Set(
+    rows.flatMap((row) => recommendationGalleryAssetIds(row.product)),
+  ));
+
+  if (galleryIds.length === 0) return new Map();
+
+  const assets = await prisma.mediaAsset.findMany({
+    where: { id: { in: galleryIds } },
+    select: { id: true, public_url: true, thumbnail_url: true },
+  });
+
+  return new Map(assets.map((asset) => [asset.id, asset]));
 }
 
 function isDatabaseUnavailable(error: any): boolean {
@@ -216,7 +257,8 @@ export default async function publicShoppingRoutes(fastify: FastifyInstance) {
       take: query.limit,
       include: { product: { include: { coverAsset: true } } },
     });
-    return { version: latestModel.version, items: rows.map(recommendationProductCard) };
+    const mediaById = await recommendationMediaLookup(rows);
+    return { version: latestModel.version, items: rows.map((row) => recommendationProductCard(row, mediaById)) };
   });
 
   fastify.get('/recommendations/product/:externalId', async (request: FastifyRequest, reply: FastifyReply) => {
@@ -246,7 +288,8 @@ export default async function publicShoppingRoutes(fastify: FastifyInstance) {
       take: query.limit,
       include: { product: { include: { coverAsset: true } } },
     });
-    return { version: latestModel.version, items: rows.map(recommendationProductCard) };
+    const mediaById = await recommendationMediaLookup(rows);
+    return { version: latestModel.version, items: rows.map((row) => recommendationProductCard(row, mediaById)) };
   });
 
   fastify.get('/blog', async () => {

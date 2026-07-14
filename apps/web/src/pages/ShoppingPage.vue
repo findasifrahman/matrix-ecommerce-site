@@ -1,46 +1,23 @@
 <template>
   <div class="min-h-screen bg-[#eef3f9] text-slate-700">
     <main class="w-full pb-20 md:pb-16">
-      <section class="w-full overflow-hidden bg-[#dfe8e2] shadow-[0_24px_80px_rgba(15,23,42,0.12)]">
-        <div class="relative min-h-[360px] overflow-hidden sm:min-h-[520px]">
+      <section class="w-full overflow-hidden bg-[#eef3f9] shadow-[0_24px_80px_rgba(15,23,42,0.12)]">
+        <div class="relative min-h-[320px] overflow-hidden sm:min-h-[460px]">
           <Transition name="hero-fade" mode="out-in">
             <div
-              :key="`hero-mobile-${activeHeroIndex}`"
-              class="absolute inset-0 bg-cover bg-center opacity-35 lg:hidden"
+              :key="`hero-image-${activeHeroIndex}`"
+              class="absolute inset-0 bg-cover bg-left-top"
               :style="{ backgroundImage: `url('${activeHeroImage}')` }"
             />
           </Transition>
-          <Transition name="hero-fade" mode="out-in">
-            <div
-              :key="`hero-desktop-${activeHeroIndex}`"
-              class="absolute inset-y-0 right-0 hidden w-[54%] bg-cover bg-center lg:block"
-              :style="{ backgroundImage: `linear-gradient(90deg, rgba(223,232,226,0.98) 0%, rgba(223,232,226,0.70) 22%, rgba(223,232,226,0.08) 58%), url('${activeHeroImage}')` }"
-            />
-          </Transition>
-          <div class="absolute inset-0 bg-[radial-gradient(circle_at_18%_18%,rgba(255,255,255,0.88),transparent_34%),linear-gradient(110deg,rgba(255,255,255,0.82),rgba(255,255,255,0.38)_68%)] lg:bg-[radial-gradient(circle_at_18%_18%,rgba(255,255,255,0.85),transparent_34%),linear-gradient(110deg,rgba(255,255,255,0.72),rgba(255,255,255,0)_68%)]" />
+          <div class="absolute inset-0 bg-[linear-gradient(90deg,rgba(238,243,249,0.98)_0%,rgba(238,243,249,0.88)_45%,rgba(238,243,249,0.36)_78%,rgba(238,243,249,0.08)_100%)] lg:bg-[linear-gradient(90deg,rgba(238,243,249,0.96)_0%,rgba(238,243,249,0.82)_25%,rgba(238,243,249,0.35)_46%,rgba(238,243,249,0)_72%)]" />
 
-          <div class="relative grid min-h-[360px] items-center gap-5 px-3 py-5 sm:min-h-[520px] sm:px-8 sm:py-8 lg:grid-cols-[minmax(0,640px)_1fr] lg:px-14 xl:px-20">
-            <div class="space-y-4 sm:space-y-5">
-              <p class="text-[10px] font-bold uppercase tracking-[0.4em] text-orange-600">Matrix Shop</p>
-              <Transition name="hero-content" mode="out-in">
-                <div :key="`hero-copy-${activeHeroIndex}`" class="space-y-3">
-                  <h1 class="max-w-3xl text-3xl font-black tracking-tight text-slate-950 sm:text-6xl">
-                    {{ activeHeroTitle }}
-                  </h1>
-                  <p class="max-w-2xl text-sm leading-6 text-slate-600 sm:text-base">
-                    {{ activeHeroSubtitle }}
-                  </p>
-                </div>
-              </Transition>
+          <div class="relative flex min-h-[320px] items-start px-3 pb-5 pt-7 sm:min-h-[460px] sm:px-8 sm:py-8 lg:items-center lg:px-14 xl:px-20">
+            <div class="w-full max-w-3xl space-y-4 sm:space-y-5">
+              <h1 class="text-[16px] font-bold uppercase tracking-[0.4em] text-orange-600">Matrix Shop</h1>
 
-              <div class="rounded-[22px] border border-white/80 bg-white/90 p-3 shadow-[0_16px_36px_rgba(15,23,42,0.08)] backdrop-blur sm:rounded-[28px] sm:p-4 lg:max-w-3xl">
-                <div class="flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
-                  <p class="text-[10px] font-bold uppercase tracking-[0.28em] text-slate-400">Find Accessories By Brand</p>
-                  <Button type="button" variant="ghost" class="h-10 rounded-full px-4 text-xs font-semibold uppercase tracking-[0.12em]" @click="openBrowse">
-                    Browse all
-                  </Button>
-                </div>
-                <div class="mt-3 grid gap-2 sm:gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto]">
+              <div class="rounded-[22px] border border-white/80 bg-white/90 p-3 shadow-[0_16px_36px_rgba(15,23,42,0.08)] backdrop-blur sm:rounded-[28px] sm:p-4">
+                <div class="grid gap-2 sm:gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto]">
                   <select
                     v-model="mobileBrandId"
                     class="h-11 rounded-2xl border border-slate-200 bg-white px-3 text-sm font-medium text-slate-900 outline-none focus:border-orange-300 sm:h-12 sm:px-4"
@@ -61,21 +38,9 @@
                     </option>
                   </select>
                   <Button type="button" variant="primary" class="h-11 rounded-full bg-orange-600 px-5 hover:bg-orange-700 sm:h-12 sm:px-6" @click="openMobileBrandBrowse">
-                    See cases
+                    View
                   </Button>
                 </div>
-              </div>
-
-              <div class="flex flex-wrap gap-2">
-                <button
-                  v-for="chip in quickSearchChips"
-                  :key="chip.label"
-                  type="button"
-                  class="rounded-full border border-white/80 bg-white/85 px-4 py-2 text-xs font-semibold text-slate-700 shadow-sm transition-colors hover:border-orange-200 hover:text-orange-700"
-                  @click="openKeyword(chip.keyword)"
-                >
-                  {{ chip.label }}
-                </button>
               </div>
 
               <div v-if="heroBanners.length > 1" class="flex gap-2">
