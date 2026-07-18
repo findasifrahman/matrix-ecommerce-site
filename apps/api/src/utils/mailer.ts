@@ -1,6 +1,8 @@
 import nodemailer from 'nodemailer';
 import type SMTPTransport from 'nodemailer/lib/smtp-transport';
-import { lookup as dnsLookup } from 'node:dns';
+import dns, { lookup as dnsLookup } from 'node:dns';
+
+dns.setDefaultResultOrder('ipv4first');
 
 type MailPayload = {
   to: string;
@@ -62,21 +64,29 @@ export function mailerConfigStatus() {
   };
 }
 
-function createTransport() {
+async function resolveSmtpHost(host: string, family: number) {
+  if (family !== 4 && family !== 6) return host;
+  const result = await dns.promises.lookup(host, { family });
+  return result.address;
+}
+
+async function createTransport() {
   const config = smtpConfig();
   if (!smtpConfigured()) {
     throw new Error('SMTP is not configured');
   }
   const host = config.host as string;
+  const family = config.family || 4;
+  const resolvedHost = await resolveSmtpHost(host, family);
 
   return nodemailer.createTransport({
-    host,
+    host: resolvedHost,
     port: config.port,
     secure: config.port === 465,
     name: host,
-    family: config.family,
+    family,
     lookup(hostname, _options, callback) {
-      dnsLookup(hostname, { family: config.family || 4, all: false }, callback);
+      dnsLookup(hostname, { family, all: false }, callback);
     },
     connectionTimeout: Number(envValue('SMTP_CONNECTION_TIMEOUT_MS') || 10000),
     greetingTimeout: Number(envValue('SMTP_GREETING_TIMEOUT_MS') || 10000),
@@ -93,7 +103,7 @@ function createTransport() {
 
 export async function sendMail(payload: MailPayload) {
   const config = smtpConfig();
-  const transporter = createTransport();
+  const transporter = await createTransport();
   return transporter.sendMail({
     from: config.from || `"Matrix Shop" <${config.user}>`,
     ...payload,
