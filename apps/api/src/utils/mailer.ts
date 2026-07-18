@@ -11,6 +11,11 @@ type MailPayload = {
   html?: string;
 };
 
+type ProviderResponse = {
+  messageId?: string;
+  id?: string;
+};
+
 type SmtpConfig = {
   host?: string;
   port: number;
@@ -153,7 +158,13 @@ async function sendViaResend(config: SmtpConfig, payload: MailPayload) {
     throw new Error(`Resend email failed: ${message || response.statusText}`);
   }
 
-  return response.json();
+  const result = await response.json() as ProviderResponse;
+  console.info('[Mailer] Resend accepted email', {
+    messageId: result.messageId || result.id,
+    to: payload.to,
+    subject: payload.subject,
+  });
+  return result;
 }
 
 async function sendViaBrevo(config: SmtpConfig, payload: MailPayload) {
@@ -182,7 +193,14 @@ async function sendViaBrevo(config: SmtpConfig, payload: MailPayload) {
     throw new Error(`Brevo email failed: ${message || response.statusText}`);
   }
 
-  return response.json();
+  const result = await response.json() as ProviderResponse;
+  console.info('[Mailer] Brevo accepted email', {
+    messageId: result.messageId || result.id,
+    to: payload.to,
+    subject: payload.subject,
+    sender: sender.email,
+  });
+  return result;
 }
 
 export async function sendMail(payload: MailPayload) {
