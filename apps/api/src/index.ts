@@ -31,6 +31,8 @@ await fastify.register(cors, {
       process.env.APP_BASE_URL || 'http://localhost:5173',
       'http://localhost:5173',
       'http://127.0.0.1:5173',
+      'https://www.matrixshop.bd',
+      'https://matrixshop.bd',
       'https://matrix-ecommerce.vercel.app',
       'https://www.matrix-ecommerce.com',
       ...(process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',') : []),

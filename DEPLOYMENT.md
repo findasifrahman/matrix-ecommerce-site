@@ -119,7 +119,7 @@ Optional variables only if you use those features:
 ```env
 GOOGLE_CLIENT_ID=
 GOOGLE_CLIENT_SECRET=
-GOOGLE_REDIRECT_URI=https://your-backend-service.up.railway.app/api/auth/google/callback
+GOOGLE_REDIRECT_URI=https://bridgechina-production.up.railway.app/api/auth/google/callback
 
 SMTP_HOST=
 SMTP_PORT=587

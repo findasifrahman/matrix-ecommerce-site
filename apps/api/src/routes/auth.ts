@@ -242,9 +242,9 @@ async function sendOtpEmail(email: string, code: string, purpose: 'auth' | 'pass
   const label = purpose === 'password_reset' ? 'password reset' : 'sign in';
   await sendMail({
     to: email,
-    subject: `Your Matrix Shop ${label} code`,
-    text: `Your Matrix Shop ${label} code is ${code}. It expires in 10 minutes.`,
-    html: `<p>Your Matrix Shop ${label} code is <strong>${code}</strong>.</p><p>It expires in 10 minutes.</p>`,
+    subject: `Your Matrixshop ${label} code`,
+    text: `Your Matrixshop ${label} code is ${code}. It expires in 10 minutes. Visit ${webAppBaseUrl()} if you did not request this code.`,
+    html: `<p>Your Matrixshop ${label} code is <strong>${code}</strong>.</p><p>It expires in 10 minutes.</p><p>If you did not request this code, you can ignore this email.</p>`,
   });
 }
 
@@ -858,7 +858,7 @@ export default async function authRoutes(fastify: FastifyInstance) {
       await createAndSendOtp(email, 'password_reset');
     } catch (error: any) {
       request.log.error({ err: error }, '[Auth] Failed to send password reset code');
-      return reply.status(500).send({ error: error.message || 'Failed to send password reset code' });
+      return reply.status(500).send({ error: emailCodeRequestErrorMessage(error) });
     }
 
     return { message: 'Password reset code sent' };
