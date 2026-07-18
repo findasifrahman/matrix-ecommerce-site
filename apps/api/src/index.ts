@@ -83,6 +83,11 @@ fastify.get('/health', async () => ({
   mailer: mailerConfigStatus(),
 }));
 
+fastify.get('/auth/google/callback', async (request, reply) => {
+  const queryString = request.url.includes('?') ? request.url.slice(request.url.indexOf('?')) : '';
+  return reply.redirect(`/api/auth/google/callback${queryString}`);
+});
+
 await fastify.register(publicRoutes, { prefix: '/api/public' });
 await fastify.register(authRoutes, { prefix: '/api/auth' });
 await fastify.register(userRoutes, { prefix: '/api/user' });
