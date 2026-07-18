@@ -293,7 +293,7 @@
             </section>
           </aside>
 
-          <aside class="hidden space-y-4 2xl:block">
+          <aside class="hidden self-start space-y-4 2xl:block">
             <section class="rounded-[30px] border border-slate-200 bg-white p-5 shadow-[0_16px_38px_rgba(15,23,42,0.05)]">
               <div class="flex items-center justify-between gap-3">
                 <div>
@@ -309,7 +309,7 @@
                 </button>
               </div>
 
-              <div v-if="relatedProducts.length > 0" class="mt-4 max-h-[660px] space-y-3 overflow-y-auto pr-1">
+              <div v-if="relatedProducts.length > 0" class="mt-4 space-y-3">
                 <button
                   v-for="item in relatedProducts.slice(0, 6)"
                   :key="`rail-${item.externalId}`"
