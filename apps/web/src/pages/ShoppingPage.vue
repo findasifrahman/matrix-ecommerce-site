@@ -106,7 +106,10 @@
             <p class="text-[10px] font-bold uppercase tracking-[0.3em] text-slate-400">Hot items</p>
             <h2 class="mt-1 text-xl font-black tracking-tight text-slate-950">Spotlight products</h2>
           </div>
-          <Button variant="ghost" size="sm" @click="openBrowse">Browse more</Button>
+          <button type="button" class="browse-more-button" @click="openBrowse">
+            <span>Browse more</span>
+            <ArrowRight class="h-4 w-4" />
+          </button>
         </div>
 
         <div class="mt-4 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-2">
@@ -128,12 +131,15 @@
           <div>
             <h2 class="text-[10px] font-bold uppercase tracking-[0.3em] text-slate-400">Recommended</h2>
           </div>
-          <Button variant="ghost" size="sm" @click="openBrowse">Browse more</Button>
+          <button type="button" class="browse-more-button" @click="openBrowse">
+            <span>Browse more</span>
+            <ArrowRight class="h-4 w-4" />
+          </button>
         </div>
 
-        <div class="mt-4 grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
+        <div class="mt-4 grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-6">
           <ProductCard
-            v-for="product in recommendedItems.slice(0, 8)"
+            v-for="product in recommendedItems.slice(0, 6)"
             :key="product.externalId"
             :product="product"
             @click="openProduct"
@@ -154,7 +160,10 @@
               Everyone wants to buy {{ hotProductKeywords.join(', ') }} and more.
             </p>
           </div>
-          <Button variant="ghost" size="sm" @click="openBrowse">Browse more</Button>
+          <button type="button" class="browse-more-button" @click="openBrowse">
+            <span>Browse more</span>
+            <ArrowRight class="h-4 w-4" />
+          </button>
         </div>
 
         <div class="mt-4 grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-6">
@@ -191,7 +200,10 @@
               <h2 class="mt-1 text-xl font-black tracking-tight text-slate-950">{{ section.title }}</h2>
             </div>
           </div>
-          <Button variant="ghost" size="sm" @click="openKeyword(section.searchKeyword || section.title)">Browse more</Button>
+          <button type="button" class="browse-more-button" @click="openKeyword(section.searchKeyword || section.title)">
+            <span>Browse more</span>
+            <ArrowRight class="h-4 w-4" />
+          </button>
         </div>
 
         <div class="mt-4 grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
@@ -214,6 +226,7 @@ import { useRoute, useRouter } from 'vue-router';
 import axios from '@/utils/axios';
 import { Button, useToast } from '@matrix-ecommerce/ui';
 import ProductCard from '@/components/shopping/ProductCard.vue';
+import { ArrowRight } from 'lucide-vue-next';
 import { useShoppingCart } from '@/composables/useShoppingCart';
 import { getYouMayLikeProducts, recordMenuIntent, recordProductIntent, recordRecommendationEvent } from '@/utils/shopping-personalization';
 import { useSeo } from '@/utils/seo';
@@ -390,11 +403,11 @@ async function loadHotDeals() {
 
 async function loadRecommended() {
   try {
-    const response = await axios.get('/api/public/recommendations/global', { params: { limit: 8 } });
+    const response = await axios.get('/api/public/recommendations/global', { params: { limit: 6 } });
     const modelItems = Array.isArray(response.data?.items) ? response.data.items : [];
-    recommendedItems.value = modelItems.length > 0 ? modelItems : getYouMayLikeProducts(8);
+    recommendedItems.value = modelItems.length > 0 ? modelItems : getYouMayLikeProducts(6);
   } catch {
-    recommendedItems.value = getYouMayLikeProducts(8);
+    recommendedItems.value = getYouMayLikeProducts(6);
   }
 }
 
@@ -584,6 +597,33 @@ onUnmounted(() => {
   box-shadow:
     0 10px 16px rgba(15, 23, 42, 0.12),
     inset 0 0 0 1px rgba(255, 255, 255, 0.7);
+}
+
+.browse-more-button {
+  display: inline-flex;
+  min-height: 42px;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: 9999px;
+  border: 1px solid rgba(15, 118, 110, 0.28);
+  background: linear-gradient(135deg, #0f766e, #f97316);
+  padding: 0.65rem 1rem;
+  font-size: 0.9rem;
+  font-weight: 900;
+  color: #fff;
+  box-shadow: 0 12px 24px rgba(15, 118, 110, 0.2);
+  transition: transform 180ms ease, box-shadow 180ms ease, filter 180ms ease;
+}
+
+.browse-more-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 16px 30px rgba(249, 115, 22, 0.24);
+  filter: saturate(1.05);
+}
+
+.browse-more-button:active {
+  transform: translateY(0);
 }
 
 @keyframes marquee-scroll {

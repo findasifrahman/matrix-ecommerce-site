@@ -293,7 +293,7 @@
             </section>
           </aside>
 
-          <aside class="space-y-4">
+          <aside class="hidden space-y-4 2xl:block">
             <section class="rounded-[30px] border border-slate-200 bg-white p-5 shadow-[0_16px_38px_rgba(15,23,42,0.05)]">
               <div class="flex items-center justify-between gap-3">
                 <div>
@@ -309,9 +309,9 @@
                 </button>
               </div>
 
-              <div v-if="relatedProducts.length > 0" class="mt-4 space-y-3">
+              <div v-if="relatedProducts.length > 0" class="mt-4 max-h-[660px] space-y-3 overflow-y-auto pr-1">
                 <button
-                  v-for="item in relatedProducts"
+                  v-for="item in relatedProducts.slice(0, 6)"
                   :key="`rail-${item.externalId}`"
                   type="button"
                   class="flex w-full items-start gap-3 rounded-[22px] border border-slate-200 p-3 text-left transition hover:border-teal-300"
@@ -373,7 +373,58 @@
             </div>
           </div>
 
-          <div v-else-if="activeDetailTab === 'specification'" class="mt-5">
+          <section v-if="activeDetailTab === 'overview' && relatedProducts.length > 0" class="mt-6 2xl:hidden">
+            <div class="flex items-center justify-between gap-3">
+              <div>
+                <p class="text-[10px] font-black uppercase tracking-[0.28em] text-slate-400">Same category</p>
+                <h2 class="mt-1 text-lg font-black tracking-tight text-slate-950">More from this catalog</h2>
+              </div>
+              <button
+                type="button"
+                class="rounded-full border border-slate-200 p-2 text-slate-500 transition hover:border-teal-300 hover:text-teal-600"
+                @click="loadRelatedProducts"
+              >
+                <RefreshCcw class="h-4 w-4" />
+              </button>
+            </div>
+            <div class="mt-4 grid grid-cols-2 gap-3">
+              <ProductCard
+                v-for="item in relatedProducts.slice(0, 6)"
+                :key="`mobile-related-${item.externalId}`"
+                :product="item"
+                @click="openProduct"
+                @request-buy="addSuggestedToCart"
+              />
+            </div>
+          </section>
+
+          <section v-if="activeDetailTab === 'overview' && recommendationProducts.length > 0" class="mt-6">
+            <div class="flex items-center justify-between gap-3">
+              <div>
+                <p class="text-[10px] font-black uppercase tracking-[0.28em] text-slate-400">Recommended</p>
+                <h2 class="mt-1 text-lg font-black tracking-tight text-slate-950">Picked for you</h2>
+              </div>
+              <button
+                type="button"
+                class="inline-flex items-center gap-2 rounded-full border border-teal-200 bg-teal-600 px-4 py-2 text-sm font-black text-white shadow-[0_12px_24px_rgba(15,118,110,0.2)] transition hover:bg-teal-700"
+                @click="openBrowse"
+              >
+                <span>Browse more</span>
+                <ArrowRight class="h-4 w-4" />
+              </button>
+            </div>
+            <div class="mt-4 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3 2xl:grid-cols-6">
+              <ProductCard
+                v-for="item in recommendationProducts.slice(0, 6)"
+                :key="`engine-${item.externalId}`"
+                :product="item"
+                @click="openProduct"
+                @request-buy="addSuggestedToCart"
+              />
+            </div>
+          </section>
+
+          <div v-if="activeDetailTab === 'specification'" class="mt-5">
             <div v-if="detailPoints.length > 0" class="space-y-3 rounded-[24px] border border-slate-200 bg-slate-50 p-5">
               <div
                 v-for="(point, index) in detailPoints"
@@ -390,7 +441,7 @@
             </div>
           </div>
 
-          <div v-else-if="activeDetailTab === 'variants'" class="mt-5">
+          <div v-if="activeDetailTab === 'variants'" class="mt-5">
             <div v-if="specificationRows.length > 0" class="grid gap-3 lg:grid-cols-2">
               <div
                 v-for="(spec, index) in specificationRows"
@@ -415,7 +466,7 @@
             </div>
           </div>
 
-          <div v-else class="mt-5 rounded-[28px] border border-slate-200 bg-slate-50 p-4">
+          <div v-if="activeDetailTab === 'seller'" class="mt-5 rounded-[28px] border border-slate-200 bg-slate-50 p-4">
             <div class="grid gap-3">
               <div class="grid gap-3 border-b border-slate-200 pb-3 md:grid-cols-[180px_1fr]">
                 <div class="text-sm font-semibold text-slate-500">Seller</div>
@@ -525,9 +576,10 @@ import { computed, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import axios from '@/utils/axios';
 import { useToast, Button } from '@matrix-ecommerce/ui';
-import { ArrowLeft, ChevronLeft, ChevronRight, Layers3, Package, RefreshCcw, Star, Truck, X, ZoomIn } from 'lucide-vue-next';
+import { ArrowLeft, ArrowRight, ChevronLeft, ChevronRight, Layers3, Package, RefreshCcw, Star, Truck, X, ZoomIn } from 'lucide-vue-next';
 import { useShoppingCart } from '@/composables/useShoppingCart';
-import { recordRecommendationEvent } from '@/utils/shopping-personalization';
+import { getYouMayLikeProducts, recordRecommendationEvent } from '@/utils/shopping-personalization';
+import ProductCard from '@/components/shopping/ProductCard.vue';
 
 const route = useRoute();
 const router = useRouter();
@@ -538,6 +590,7 @@ const loading = ref(false);
 const relatedLoading = ref(false);
 const product = ref<any | null>(null);
 const relatedProducts = ref<any[]>([]);
+const recommendationProducts = ref<any[]>([]);
 const activeImage = ref('');
 const lightboxOpen = ref(false);
 const selectedSkuIndex = ref(0);
@@ -827,6 +880,12 @@ function addCurrentToCart() {
   toast.success('Added to cart');
 }
 
+function addSuggestedToCart(item: any) {
+  addToCartComposable(item, 1);
+  recordRecommendationEvent('add_to_cart', item, { source: 'product_detail_suggestions', qty: 1 });
+  toast.success('Added to cart');
+}
+
 function buyNow() {
   const cart = buildCartPayload();
   if (!cart) return;
@@ -844,23 +903,75 @@ async function loadRelatedProducts() {
 
   relatedLoading.value = true;
   try {
+    const baseParams = {
+      category: product.value?.raw?.category?.slug || undefined,
+      mainCategory: product.value?.raw?.mainCategory?.slug || undefined,
+      brandId: product.value?.raw?.brand_id || undefined,
+      productTypeId: product.value?.raw?.product_type_id || undefined,
+      page: 1,
+      pageSize: 12,
+    };
     const response = await axios.get('/api/public/shopping/search', {
-      params: {
-        category: product.value?.raw?.category?.slug || undefined,
-        mainCategory: product.value?.raw?.mainCategory?.slug || undefined,
-        brandId: product.value?.raw?.brand_id || undefined,
-        productTypeId: product.value?.raw?.product_type_id || undefined,
-        page: 1,
-        pageSize: 8,
-      },
+      params: baseParams,
     });
 
-    const items = Array.isArray(response.data?.items) ? response.data.items : [];
-    relatedProducts.value = items.filter((item: any) => item.externalId !== product.value.externalId).slice(0, 6);
+    const primaryItems = Array.isArray(response.data?.items) ? response.data.items : [];
+    let merged = primaryItems.filter((item: any) => item.externalId !== product.value.externalId);
+
+    if (merged.length < 6) {
+      const fallbackResponse = await axios.get('/api/public/shopping/search', {
+        params: {
+          mainCategory: product.value?.raw?.mainCategory?.slug || undefined,
+          category: product.value?.raw?.category?.slug || undefined,
+          page: 1,
+          pageSize: 18,
+        },
+      });
+      const fallbackItems = Array.isArray(fallbackResponse.data?.items) ? fallbackResponse.data.items : [];
+      const seen = new Set(merged.map((item: any) => item.externalId));
+      for (const item of fallbackItems) {
+        if (item.externalId === product.value.externalId || seen.has(item.externalId)) continue;
+        merged.push(item);
+        seen.add(item.externalId);
+        if (merged.length >= 6) break;
+      }
+    }
+
+    relatedProducts.value = merged.slice(0, 6);
   } catch {
     relatedProducts.value = [];
   } finally {
     relatedLoading.value = false;
+  }
+}
+
+async function loadRecommendationProducts() {
+  if (!product.value) {
+    recommendationProducts.value = [];
+    return;
+  }
+
+  try {
+    const response = await axios.get(`/api/public/recommendations/product/${product.value.externalId}`, {
+      params: {
+        limit: 6,
+      },
+    });
+    let items = Array.isArray(response.data?.items) ? response.data.items : [];
+    if (items.length < 6) {
+      const globalResponse = await axios.get('/api/public/recommendations/global', { params: { limit: 6 } });
+      const globalItems = Array.isArray(globalResponse.data?.items) ? globalResponse.data.items : [];
+      const seen = new Set(items.map((item: any) => item.externalId));
+      for (const item of globalItems) {
+        if (item.externalId === product.value.externalId || seen.has(item.externalId)) continue;
+        items.push(item);
+        seen.add(item.externalId);
+        if (items.length >= 6) break;
+      }
+    }
+    recommendationProducts.value = items.length > 0 ? items.slice(0, 6) : getYouMayLikeProducts(6);
+  } catch {
+    recommendationProducts.value = getYouMayLikeProducts(6);
   }
 }
 
@@ -877,6 +988,10 @@ function openSellerBrowse() {
       brandId: product.value?.raw?.brand_id || undefined,
     },
   });
+}
+
+function openBrowse() {
+  router.push({ name: 'shopping-browse' });
 }
 
 async function loadProduct() {
@@ -897,11 +1012,12 @@ async function loadProduct() {
     quantity.value = Math.max(1, Number(response.data?.minimumOrderQty || 1));
     normalizeQuantity();
     recordRecommendationEvent('product_view', response.data, { source: 'product_detail' });
-    await loadRelatedProducts();
+    await Promise.all([loadRelatedProducts(), loadRecommendationProducts()]);
   } catch (error) {
     console.error('Failed to load product', error);
     product.value = null;
     relatedProducts.value = [];
+    recommendationProducts.value = [];
   } finally {
     loading.value = false;
   }
