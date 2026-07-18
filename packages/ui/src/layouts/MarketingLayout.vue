@@ -55,13 +55,13 @@
         >Contact</router-link>
         <router-link
           v-if="isAuthenticated"
-          :to="userRoles.includes('ADMIN') || userRoles.includes('EDITOR') ? '/admin' : userRoles.includes('SELLER') ? '/seller' : '/user'"
+          :to="accountPath"
           class="flex items-center rounded-xl px-3 py-2 text-[13px] font-semibold text-white/80 hover:bg-white/8 hover:text-white"
           @click="closeDrawer"
-        >Dashboard</router-link>
+        >{{ accountLabel }}</router-link>
         <router-link
           v-else
-          to="/login"
+          :to="{ path: '/login', query: { redirect: route.fullPath } }"
           class="flex items-center rounded-xl px-3 py-2 text-[13px] font-semibold text-white/80 hover:bg-white/8 hover:text-white"
           @click="closeDrawer"
         >Sign in</router-link>
@@ -223,12 +223,12 @@
             >Contact</router-link>
             <router-link
               v-if="isAuthenticated"
-              :to="userRoles.includes('ADMIN') || userRoles.includes('EDITOR') ? '/admin' : userRoles.includes('SELLER') ? '/seller' : '/user'"
+              :to="accountPath"
               class="rounded-full px-3 py-2 text-[13px] font-semibold text-white/90 transition-colors hover:bg-white/10 hover:text-white"
-            >Dashboard</router-link>
+            >{{ accountLabel }}</router-link>
             <router-link
               v-else
-              to="/login"
+              :to="{ path: '/login', query: { redirect: route.fullPath } }"
               class="rounded-full px-3 py-2 text-[13px] font-semibold text-white/90 transition-colors hover:bg-white/10 hover:text-white"
             >Sign in</router-link>
             <Button
@@ -411,8 +411,20 @@ const mobileBottomNav = [
   { label: 'Home', to: '/shopping', icon: Home, match: ['/shopping'] },
   { label: 'Categories', to: '/shopping/browse', icon: Grid3X3, match: ['/shopping/browse'] },
   { label: 'Cart', to: '/shopping/cart', icon: ShoppingCart, match: ['/shopping/cart', '/shopping/checkout'] },
-  { label: 'Sign in', to: '/login', icon: User, match: ['/login', '/register'] },
+  { label: 'Sign in', to: { path: '/login', query: { redirect: route.fullPath } }, icon: User, match: ['/login', '/register'] },
 ];
+
+const accountPath = computed(() => {
+  if (userRoles.value.includes('ADMIN') || userRoles.value.includes('EDITOR')) return '/admin';
+  if (userRoles.value.includes('SELLER')) return '/seller';
+  return '/user';
+});
+
+const accountLabel = computed(() => {
+  if (userRoles.value.includes('ADMIN') || userRoles.value.includes('EDITOR')) return 'Admin';
+  if (userRoles.value.includes('SELLER')) return 'Seller';
+  return 'Account';
+});
 
 function isBottomNavActive(item: any) {
   return item.match.some((path: string) => route.path === path);

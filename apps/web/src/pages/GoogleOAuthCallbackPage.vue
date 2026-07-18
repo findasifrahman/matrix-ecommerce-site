@@ -13,6 +13,7 @@ import { useRoute, useRouter } from 'vue-router';
 import { useToast } from '@matrix-ecommerce/ui';
 import { useAuthStore } from '@/stores/auth';
 import { getApiBaseUrl } from '@/utils/api-url';
+import { clearRememberedAuthReturnPath, getRememberedAuthReturnPath, isSafeRedirectPath, resolveAuthRedirect } from '@/utils/auth-redirect';
 
 const route = useRoute();
 const router = useRouter();
@@ -31,8 +32,8 @@ onMounted(async () => {
 
   const params = new URLSearchParams(window.location.hash.replace(/^#/, ''));
   const token = params.get('accessToken') || String(route.query.accessToken || '');
-  const storedRedirect = sessionStorage.getItem('bc_auth_redirect_after_oauth') || '';
-  const redirect = params.get('redirect') || String(route.query.redirect || storedRedirect || '/user');
+  const storedRedirect = sessionStorage.getItem('matrix_auth_redirect_after_oauth') || sessionStorage.getItem('bc_auth_redirect_after_oauth') || '';
+  const redirect = params.get('redirect') || String(route.query.redirect || storedRedirect || getRememberedAuthReturnPath());
   if (!token) {
     toast.error('Google sign in failed');
     router.replace('/login');
@@ -41,8 +42,11 @@ onMounted(async () => {
 
   try {
     await authStore.acceptOAuthAccessToken(token);
+    const target = resolveAuthRedirect(authStore.user?.roles || [], isSafeRedirectPath(redirect) ? redirect : '/shopping');
     sessionStorage.removeItem('bc_auth_redirect_after_oauth');
-    router.replace(redirect.startsWith('/') && !redirect.startsWith('//') ? redirect : '/user');
+    sessionStorage.removeItem('matrix_auth_redirect_after_oauth');
+    clearRememberedAuthReturnPath();
+    router.replace(target);
   } catch {
     toast.error('Google sign in failed');
     router.replace('/login');

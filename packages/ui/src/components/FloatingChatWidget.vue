@@ -19,7 +19,7 @@
       <!-- Header -->
       <div class="bg-teal-600 text-white p-3 sm:p-4 rounded-t-lg flex justify-between items-center flex-shrink-0">
         <div class="min-w-0 flex-1">
-          <h3 class="font-semibold text-sm sm:text-base text-yellow-100 truncate">BridgeChina Assistant</h3>
+          <h3 class="font-semibold text-sm sm:text-base text-yellow-100 truncate">Matrixshop Assistant</h3>
           <p class="text-xs text-white/80 hidden sm:block">Ask me anything about China services</p>
         </div>
         <button 
@@ -38,7 +38,7 @@
           <div class="inline-block bg-teal-100 rounded-full p-3 mb-3">
             <MessageCircle class="h-8 w-8 text-teal-600" />
           </div>
-          <p class="text-sm text-slate-600 mb-2">Hi! 👋 I'm your BridgeChina assistant.</p>
+          <p class="text-sm text-slate-600 mb-2">Hi! I'm your Matrixshop assistant.</p>
           <p class="text-xs text-slate-500">I can help you with hotels, transport, food, medical help, tours, eSIM, and shopping.</p>
         </div>
 
@@ -119,7 +119,7 @@
           </Button>
         </div>
         <p class="text-xs text-slate-500 mt-2 text-center">
-          Powered by BridgeChina AI
+          Powered by Matrixshop AI
         </p>
       </div>
     </div>

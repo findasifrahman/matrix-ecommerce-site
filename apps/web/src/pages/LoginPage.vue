@@ -41,7 +41,7 @@ import { computed, onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import AuthOtpPanel from '@/components/auth/AuthOtpPanel.vue';
 import { useAuthStore } from '@/stores/auth';
-import { resolveAuthRedirect } from '@/utils/auth-redirect';
+import { clearRememberedAuthReturnPath, preferredAuthRedirect, resolveAuthRedirect } from '@/utils/auth-redirect';
 import { Button, Input, useToast } from '@matrix-ecommerce/ui';
 
 const route = useRoute();
@@ -49,7 +49,7 @@ const router = useRouter();
 const authStore = useAuthStore();
 const toast = useToast();
 
-const redirectPath = computed(() => String(route.query.redirect || '/user'));
+const redirectPath = computed(() => preferredAuthRedirect(route.query.redirect));
 const showPasswordLogin = ref(false);
 const passwordLoading = ref(false);
 const emailOrPhone = ref('');
@@ -62,9 +62,8 @@ onMounted(() => {
 });
 
 function handleAuthenticated() {
-  const target = route.query.redirect
-    ? String(route.query.redirect)
-    : resolveAuthRedirect(authStore.user?.roles || [], '/user');
+  const target = resolveAuthRedirect(authStore.user?.roles || [], redirectPath.value);
+  clearRememberedAuthReturnPath();
   router.push(target);
 }
 

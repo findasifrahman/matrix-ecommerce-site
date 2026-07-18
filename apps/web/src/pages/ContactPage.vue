@@ -23,7 +23,7 @@
               <div class="rounded-[24px] border border-white/15 bg-white/10 p-5 backdrop-blur">
                 <Mail class="h-5 w-5 text-orange-200" />
                 <p class="mt-3 text-[10px] font-bold uppercase tracking-[0.28em] text-orange-100/80">Email</p>
-                <a href="mailto:support@matrix-ecommerce.com" class="mt-2 block text-lg font-black tracking-tight text-white">support@matrix-ecommerce.com</a>
+                <a href="mailto:info@matrixshop.bd" class="mt-2 block text-lg font-black tracking-tight text-white">info@matrixshop.bd</a>
                 <p class="mt-2 text-xs leading-6 text-slate-100/80">Best for business orders, quotations, and supplier conversations.</p>
               </div>
             </div>
@@ -61,7 +61,7 @@
               <a href="tel:+8801735494275" class="inline-flex items-center justify-center rounded-full bg-orange-600 px-5 py-3 text-sm font-bold text-white transition-colors hover:bg-orange-700">
                 Call support
               </a>
-              <a href="mailto:support@matrix-ecommerce.com" class="inline-flex items-center justify-center rounded-full border border-slate-300 bg-white px-5 py-3 text-sm font-bold text-slate-800 transition-colors hover:border-orange-300 hover:text-orange-700">
+              <a href="mailto:info@matrixshop.bd" class="inline-flex items-center justify-center rounded-full border border-slate-300 bg-white px-5 py-3 text-sm font-bold text-slate-800 transition-colors hover:border-orange-300 hover:text-orange-700">
                 Email for quote
               </a>
             </div>

@@ -176,7 +176,7 @@
               <AuthOtpPanel
                 title="Welcome"
                 subtitle="Please enter your phone number / email"
-                redirect-path="/shopping/checkout"
+                :redirect-path="authReturnPath"
                 :framed="false"
                 mode="register"
                 :show-logo="false"
@@ -486,7 +486,7 @@
 
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue';
-import { useRouter } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import { useToast } from '@matrix-ecommerce/ui';
 import { ChevronLeft, Minus, Package, Plus, ShoppingCart } from 'lucide-vue-next';
 import { Button, ConfirmDialog, Input, Select } from '@matrix-ecommerce/ui';
@@ -497,6 +497,7 @@ import AuthOtpPanel from '@/components/auth/AuthOtpPanel.vue';
 import { isValidBangladeshPhone, normalizeBangladeshPhone } from '@/utils/contact-validation';
 
 const router = useRouter();
+const route = useRoute();
 const toast = useToast();
 const authStore = useAuthStore();
 const { cartItems, totalItems, isEmpty, updateQuantity, updateSkuDetails, removeFromCart, clearCart, setCartItems } = useShoppingCart();
@@ -535,6 +536,8 @@ const addressForm = ref({
   notes: '',
   is_default: false,
 });
+
+const authReturnPath = computed(() => route.fullPath || '/shopping/cart');
 
 function getDisplayPriceMin(item: any): number | undefined {
   const value = item?.displayPriceMin ?? item?.priceMin ?? item?.sourcePriceMin;

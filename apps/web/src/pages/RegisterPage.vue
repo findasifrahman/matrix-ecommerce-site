@@ -23,18 +23,17 @@ import { computed } from 'vue';
 import { RouterLink, useRoute, useRouter } from 'vue-router';
 import AuthOtpPanel from '@/components/auth/AuthOtpPanel.vue';
 import { useAuthStore } from '@/stores/auth';
-import { resolveAuthRedirect } from '@/utils/auth-redirect';
+import { clearRememberedAuthReturnPath, preferredAuthRedirect, resolveAuthRedirect } from '@/utils/auth-redirect';
 
 const route = useRoute();
 const router = useRouter();
 const authStore = useAuthStore();
 
-const redirectPath = computed(() => String(route.query.redirect || '/user'));
+const redirectPath = computed(() => preferredAuthRedirect(route.query.redirect));
 
 function handleAuthenticated() {
-  const target = route.query.redirect
-    ? String(route.query.redirect)
-    : resolveAuthRedirect(authStore.user?.roles || [], '/user');
+  const target = resolveAuthRedirect(authStore.user?.roles || [], redirectPath.value);
+  clearRememberedAuthReturnPath();
   router.push(target);
 }
 </script>

@@ -1,7 +1,7 @@
 <template>
   <div class="space-y-6">
     <div class="flex items-center justify-between gap-4">
-      <PageHeader title="Dashboard" />
+      <PageHeader title="Customer Account" />
       <Button variant="ghost" size="sm" @click="loadData" :loading="loading">
         <RefreshCw class="h-4 w-4 mr-2" :class="{ 'animate-spin': loading }" />
         Refresh
@@ -20,7 +20,7 @@
 
       <div class="rounded-2xl border border-slate-200 bg-white p-4">
         <div class="flex items-center justify-between text-sm text-rose-600">
-          <span>User action required</span>
+          <span>Action required</span>
           <CreditCard class="h-4 w-4" />
         </div>
         <div class="mt-3 text-3xl font-semibold text-rose-600">{{ metrics.pendingPayment }}</div>

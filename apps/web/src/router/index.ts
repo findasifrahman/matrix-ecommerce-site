@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
+import { rememberAuthReturnPath } from '@/utils/auth-redirect';
 
 const router = createRouter({
   history: createWebHistory(),
@@ -331,6 +332,10 @@ router.beforeEach(async (to, _from, next) => {
     ['login', 'register', 'forgot-password', 'google-oauth-callback', 'google-oauth-callback-forward', 'contact', 'blog', 'terms', 'shopping', 'shopping-browse', 'shopping-shop', 'product-detail', 'shopping-cart', 'shopping-checkout'].includes(to.name as string);
   
   if (isPublicRoute) {
+    const isAuthRoute = ['login', 'register', 'forgot-password', 'google-oauth-callback', 'google-oauth-callback-forward'].includes(to.name as string);
+    if (!isAuthRoute) {
+      rememberAuthReturnPath(to.fullPath);
+    }
     next();
     return;
   }
