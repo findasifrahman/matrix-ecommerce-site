@@ -77,7 +77,7 @@
               :key="`${item.id}-${index}`"
               type="button"
               class="menu-item group"
-              @click="openKeyword(item.searchKeyword || item.title)"
+              @click="openQuickMenuItem(item)"
             >
               <span class="menu-avatar-wrap">
                 <span class="menu-avatar">
@@ -129,7 +129,7 @@
       >
         <div class="flex items-center justify-between gap-3">
           <div>
-            <h2 class="text-[10px] font-bold uppercase tracking-[0.3em] text-slate-400">Recommended</h2>
+            <h2 class="text-[18px] font-bold uppercase tracking-[0.3em] text-res-700">Recommended</h2>
           </div>
           <button type="button" class="browse-more-button" @click="openBrowse">
             <span>Browse more</span>
@@ -155,9 +155,9 @@
         <div class="flex items-center justify-between gap-3">
           <div>
             <p class="text-[10px] font-bold uppercase tracking-[0.3em] text-slate-400">Hot products</p>
-            <h2 class="mt-1 text-xl font-black tracking-tight text-slate-950">Popular </h2>
+            <h2 class="mt-1 text-xl font-black tracking-tight text-red-700">Popular </h2>
             <p v-if="hotProductKeywords.length > 0" class="mt-1 text-xs text-slate-500">
-              Everyone wants to buy {{ hotProductKeywords.join(', ') }} and more.
+              Everyone wants to buy .
             </p>
           </div>
           <button type="button" class="browse-more-button" @click="openBrowse">
@@ -325,6 +325,17 @@ const defaultQuickMenuItems = [
   { id: 'quick-watch', title: 'Watch', searchKeyword: 'watch strap', imageUrl: menuImage('Watch'), imageAlt: 'Watch' },
 ];
 
+const quickMenuAliases: Record<string, string[]> = {
+  'phone cover': ['phone cover', 'mobile cover', 'phone case', 'mobile case'],
+  charger: ['charger', 'adapter', 'charging dock'],
+  'phone glass': ['phone glass', 'mobile glass', 'screen protector', 'tempered glass', 'glass'],
+  earbud: ['earbud', 'earbuds', 'earphone'],
+  cable: ['cable', 'data cable', 'charging cable'],
+  'power bank': ['power bank', 'powerbank'],
+  'phone holder': ['phone holder', 'mobile holder', 'holder', 'holder stand', 'holder and stand', 'stand'],
+  watch: ['watch', 'watch strap', 'smart watch strap', 'watch protector', 'watch case'],
+};
+
 const quickMenuItems = computed(() => {
   const quickSection = visualMenuSections.value.find((section: any) => section.sectionKey === 'quick-menu');
   const items = Array.isArray(quickSection?.items) && quickSection.items.length > 0 ? quickSection.items : defaultQuickMenuItems;
@@ -468,6 +479,74 @@ function openKeyword(keyword: string) {
   router.push({
     name: 'shopping-browse',
     query: value ? { q: value } : undefined,
+  });
+}
+
+function normalizeMenuTarget(value: unknown) {
+  return String(value || '')
+    .trim()
+    .toLowerCase()
+    .replace(/&/g, ' and ')
+    .replace(/[^a-z0-9]+/g, ' ')
+    .trim();
+}
+
+function collectQuickMenuTerms(item: any) {
+  const baseTerms = [
+    item?.productTypeSlug,
+    item?.product_type_slug,
+    item?.mainCategory,
+    item?.mainCategorySlug,
+    item?.categorySlug,
+    item?.searchKeyword,
+    item?.title,
+  ];
+  const normalizedBase = baseTerms.map(normalizeMenuTarget).filter(Boolean);
+  const aliases = normalizedBase.flatMap((term) => quickMenuAliases[term] || []);
+  return Array.from(new Set([...normalizedBase, ...aliases.map(normalizeMenuTarget).filter(Boolean)]));
+}
+
+function resolveQuickMenuTarget(item: any) {
+  const directProductTypeId = String(item?.productTypeId || item?.product_type_id || '').trim();
+  if (directProductTypeId) return { productTypeId: directProductTypeId };
+
+  const directMainCategory = String(item?.mainCategory || item?.mainCategorySlug || item?.categorySlug || '').trim();
+  const terms = collectQuickMenuTerms(item);
+  const taxonomy = Array.isArray(storefrontTaxonomy.value) ? storefrontTaxonomy.value : [];
+
+  const directCategory = taxonomy.find((category: any) => (
+    directMainCategory
+    && [category?.slug, category?.name, category?.id].map(normalizeMenuTarget).includes(normalizeMenuTarget(directMainCategory))
+  ));
+  if (directCategory?.slug) return { mainCategory: directCategory.slug };
+
+  for (const category of taxonomy) {
+    const productTypes = Array.isArray(category?.productTypes) ? category.productTypes : [];
+    const matchedType = productTypes.find((type: any) => {
+      const typeTerms = [type?.slug, type?.name].map(normalizeMenuTarget).filter(Boolean);
+      return terms.some((term) => typeTerms.includes(term));
+    });
+    if (matchedType?.id) return { productTypeId: matchedType.id };
+  }
+
+  const matchedCategory = taxonomy.find((category: any) => {
+    const categoryTerms = [category?.slug, category?.name].map(normalizeMenuTarget).filter(Boolean);
+    return terms.some((term) => categoryTerms.includes(term));
+  });
+  if (matchedCategory?.slug) return { mainCategory: matchedCategory.slug };
+
+  const fallbackKeyword = String(item?.searchKeyword || item?.title || '').trim();
+  return fallbackKeyword ? { q: fallbackKeyword } : undefined;
+}
+
+function openQuickMenuItem(item: any) {
+  const label = String(item?.searchKeyword || item?.title || '').trim();
+  if (label) {
+    recordMenuIntent(label, label);
+  }
+  router.push({
+    name: 'shopping-browse',
+    query: resolveQuickMenuTarget(item),
   });
 }
 
