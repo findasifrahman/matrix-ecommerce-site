@@ -298,7 +298,7 @@
               <div class="flex items-center justify-between gap-3">
                 <div>
                   <p class="text-[10px] font-black uppercase tracking-[0.28em] text-slate-400">Suggestions</p>
-                  <h2 class="mt-1 text-lg font-black tracking-tight text-slate-950">More from this catalog</h2>
+                  <h2 class="mt-1 text-lg font-black tracking-tight text-red-600">More from this catalog</h2>
                 </div>
                 <button
                   type="button"
@@ -377,7 +377,7 @@
             <div class="flex items-center justify-between gap-3">
               <div>
                 <p class="text-[10px] font-black uppercase tracking-[0.28em] text-slate-400">Same category</p>
-                <h2 class="mt-1 text-lg font-black tracking-tight text-slate-950">More from this catalog</h2>
+                <h2 class="mt-1 text-lg font-black tracking-tight text-red-600">More from this catalog</h2>
               </div>
               <button
                 type="button"
@@ -994,6 +994,15 @@ function openBrowse() {
   router.push({ name: 'shopping-browse' });
 }
 
+function scrollProductDetailToTop() {
+  if (typeof window === 'undefined') return;
+  window.requestAnimationFrame(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+  });
+}
+
 async function loadProduct() {
   const externalId = String(route.params.externalId || '').trim();
   if (!externalId) {
@@ -1026,6 +1035,7 @@ async function loadProduct() {
 watch(
   () => route.params.externalId,
   () => {
+    scrollProductDetailToTop();
     void loadProduct();
   },
   { immediate: true },

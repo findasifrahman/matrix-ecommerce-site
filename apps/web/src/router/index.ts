@@ -4,6 +4,10 @@ import { rememberAuthReturnPath } from '@/utils/auth-redirect';
 
 const router = createRouter({
   history: createWebHistory(),
+  scrollBehavior(_to, _from, savedPosition) {
+    if (savedPosition) return savedPosition;
+    return { left: 0, top: 0 };
+  },
   routes: [
     {
       path: '/',
